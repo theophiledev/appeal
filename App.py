@@ -26,6 +26,8 @@ from flask import (Flask, request, render_template, redirect,
 from flask_mysqldb import MySQL
 import MySQLdb.cursors
 
+from ussd import _ussd, _main_menu, authenticate_student
+
 # ── optionally import Africa's Talking (graceful fallback for sandbox) ──────
 try:
     import africastalking
@@ -56,7 +58,6 @@ _otp_store: dict = {}          # phone -> { otp, expires }
 _login_attempts: dict = {}     # ip -> { count, last_attempt }
 MAX_LOGIN_ATTEMPTS = 5
 LOGIN_LOCKOUT_MINUTES = 15
-MAX_PIN_ATTEMPTS = 3
 
 # =============================================================================
 # UTILITY HELPERS
@@ -112,6 +113,9 @@ def verify_otp(phone: str, provided: str) -> bool:
         _otp_store.pop(phone, None)
         return True
     return False
+
+
+
 
 
 # =============================================================================
@@ -483,10 +487,6 @@ def logout():
 # Actor: Student  |  login/logout · view marks · submit appeal · view results
 # =============================================================================
 
-def _ussd(text):
-    return text, 200, {'Content-Type': 'text/plain'}
-
-
 @app.route('/ussd', methods=['POST'])
 def ussd():
     phone_number = request.form.get('phoneNumber', '')
@@ -523,7 +523,7 @@ def ussd():
                 if steps[2] == '0':
                     return _ussd("CON Enter your Student ID:\n0. Back")
                 student_id = steps[1]
-                auth = _authenticate_student(student_id, steps[2], phone_number)
+                auth = authenticate_student(mysql, student_id, steps[2], phone_number)
                 if auth != 'OK':
                     return _ussd(f"END {auth}")
                 c = cur()
@@ -552,7 +552,7 @@ def ussd():
                 if steps[2] == '0':
                     return _ussd("CON Enter your Student ID:\n0. Back")
                 student_id = steps[1]
-                auth = _authenticate_student(student_id, steps[2], phone_number)
+                auth = authenticate_student(mysql, student_id, steps[2], phone_number)
                 if auth != 'OK':
                     return _ussd(f"END {auth}")
                 c = cur()
@@ -620,7 +620,7 @@ def ussd():
                 if steps[2] == '0':
                     return _ussd("CON Enter your Student ID:\n0. Back")
                 student_id = steps[1]
-                auth = _authenticate_student(student_id, steps[2], phone_number)
+                auth = authenticate_student(mysql, student_id, steps[2], phone_number)
                 if auth != 'OK':
                     return _ussd(f"END {auth}")
                 c = cur()
@@ -696,65 +696,18 @@ def ussd():
         return _ussd("END Technical error. Please try again later.")
 
 
+
+
+
 # =============================================================================
-# STUDENT AUTHENTICATION HELPER
+# USSD SIMULATOR (browser-based testing)
 # =============================================================================
 
-def _authenticate_student(student_id: str, pin: str, phone: str) -> str:
-    """
-    Verify student PIN.
-    Returns 'OK' on success, or a user-facing error message.
-    """
-    c = cur()
-    c.execute(
-        "SELECT pin_hash, failed_attempts, locked FROM pin_credentials WHERE student_id=%s",
-        (student_id,)
-    )
-    row = c.fetchone()
-
-    if not row:
-        return ("No PIN found. Contact admin or use option 4 to set your PIN.")
-
-    if row['locked']:
-        log_access(student_id, phone, 'LOGIN_LOCKED', False)
-        return ("Account locked. Use option 4 to reset your PIN via OTP.")
-
-    if sha256(pin) == row['pin_hash']:
-        c2 = cur(False)
-        c2.execute(
-            "UPDATE pin_credentials SET failed_attempts=0 WHERE student_id=%s",
-            (student_id,)
-        )
-        log_access(student_id, phone, 'LOGIN_SUCCESS', True)
-        mysql.connection.commit()
-        return 'OK'
-
-    # Wrong PIN
-    new_fails = row['failed_attempts'] + 1
-    locked    = 1 if new_fails >= MAX_PIN_ATTEMPTS else 0
-    c2 = cur(False)
-    c2.execute(
-        "UPDATE pin_credentials SET failed_attempts=%s, locked=%s WHERE student_id=%s",
-        (new_fails, locked, student_id)
-    )
-    log_access(student_id, phone, 'LOGIN_FAILED', False)
-    mysql.connection.commit()
-
-    if locked:
-        return ("Account locked after 3 failed attempts. Use option 4 to reset PIN.")
-    remaining = MAX_PIN_ATTEMPTS - new_fails
-    return f"Wrong PIN. {remaining} attempt(s) remaining."
-
-
-def _main_menu() -> str:
-    return (
-        "CON Welcome to ULK Marks Appeal System\n"
-        "1. View my marks\n"
-        "2. Submit an appeal\n"
-        "3. Check appeal status\n"
-        "4. Reset my PIN\n"
-        "0. Exit"
-    )
+@app.route('/ussd-simulator')
+def ussd_simulator():
+    if not session.get('loggedin'):
+        return redirect(url_for('admin_login'))
+    return render_template('ussd_simulator.html')
 
 
 # =============================================================================
