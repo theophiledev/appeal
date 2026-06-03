@@ -5,42 +5,63 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HOD Dashboard | ULK Appeal System</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Arial, sans-serif; background: #f0f2f5; color: #333; }
-    nav { background: #0f3460; color: #fff; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
-    nav h2 { font-size: 1.2rem; }
-    nav a { color: #fff; text-decoration: none; margin-left: 1.5rem; font-size: 0.9rem; }
-    nav a:hover { text-decoration: underline; }
-    .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
-    .stats { display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; }
-    .stat-card { background: #fff; padding: 1rem 1.5rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-    .stat-card h3 { font-size: 1.5rem; color: #0f3460; }
-    .stat-card p { color: #666; font-size: 0.85rem; }
-    .section { background: #fff; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-    .section h3 { margin-bottom: 1rem; color: #0f3460; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-    th, td { padding: 0.6rem; text-align: left; border-bottom: 1px solid #eee; }
-    th { background: #0f3460; color: #fff; }
-    .flash { padding: 0.8rem; margin-bottom: 1rem; border-radius: 6px; }
-    .flash.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-    .flash.danger { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-    .badge { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 12px; font-size: 0.75rem; font-weight: bold; }
-    .badge-pending { background: #ffeeba; color: #856404; }
-    .badge-approved { background: #d4edda; color: #155724; }
-    .badge-rejected { background: #f8d7da; color: #721c24; }
-    .btn { padding: 0.4rem 0.8rem; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem; color: #fff; }
-    .btn-success { background: #28a745; }
-    .btn-danger { background: #dc3545; }
-    .btn-warning { background: #ffc107; color: #333; }
-    .inline-form { display: inline; }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;color:#333}
+    nav{background:#0f3460;color:#fff;padding:0 2rem;display:flex;justify-content:space-between;align-items:center;height:60px;position:sticky;top:0;z-index:100}
+    nav h2{font-size:1.15rem;display:flex;align-items:center;gap:8px}
+    nav h2 span{background:#e94560;font-size:0.65rem;padding:2px 8px;border-radius:10px;font-weight:400}
+    nav .nav-links{display:flex;align-items:center;gap:0.5rem}
+    nav .nav-links a{color:#ddd;text-decoration:none;font-size:0.85rem;padding:0.5rem 0.8rem;border-radius:6px;transition:all 0.2s}
+    nav .nav-links a:hover{background:rgba(255,255,255,0.1);color:#fff}
+    nav .nav-links .logout{background:#e94560;color:#fff;padding:0.4rem 1rem}
+    nav .nav-links .logout:hover{background:#c73e54}
+    .container{max-width:1300px;margin:1.5rem auto;padding:0 1.5rem}
+    .flash{padding:0.75rem 1rem;margin-bottom:1rem;border-radius:8px;font-size:0.85rem;display:flex;align-items:center;gap:8px;animation:slideIn 0.3s}
+    @keyframes slideIn{from{transform:translateY(-10px);opacity:0}to{transform:translateY(0);opacity:1}}
+    .flash.success{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
+    .flash.danger{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb}
+    .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:1.5rem}
+    .stat-card{background:#fff;padding:1.2rem;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06);text-align:center;border-top:3px solid #0f3460;transition:transform 0.2s}
+    .stat-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.1)}
+    .stat-card .num{font-size:1.6rem;font-weight:700;color:#0f3460}
+    .stat-card .lbl{color:#888;font-size:0.78rem;margin-top:2px}
+    .stat-card.green{border-top-color:#27ae60}
+    .stat-card.orange{border-top-color:#e67e22}
+    .stat-card.red{border-top-color:#e74c3c}
+    .card{background:#fff;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06);overflow:hidden;margin-bottom:1.5rem}
+    .card-header{display:flex;justify-content:space-between;align-items:center;padding:1rem 1.25rem;border-bottom:1px solid #eee}
+    .card-header h3{font-size:0.95rem;color:#0f3460;display:flex;align-items:center;gap:6px}
+    .card-header .badge{background:#eee;padding:2px 10px;border-radius:12px;font-size:0.75rem;color:#666}
+    .card-body{padding:0}
+    table{width:100%;border-collapse:collapse;font-size:0.85rem}
+    th{background:#f8f9fa;color:#555;font-weight:600;padding:0.7rem 1rem;text-align:left;border-bottom:2px solid #eee;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.5px}
+    td{padding:0.7rem 1rem;border-bottom:1px solid #f0f0f0;vertical-align:middle}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:#f8f9fa}
+    .badge{display:inline-block;padding:3px 12px;border-radius:12px;font-size:0.72rem;font-weight:600}
+    .badge-pending{background:#fff3cd;color:#856404}
+    .badge-approved{background:#d4edda;color:#155724}
+    .badge-rejected{background:#f8d7da;color:#721c24}
+    .btn{display:inline-flex;align-items:center;gap:4px;padding:0.4rem 0.8rem;border:none;border-radius:5px;font-size:0.75rem;cursor:pointer;text-decoration:none;transition:all 0.15s;font-weight:500}
+    .btn-success{background:#27ae60;color:#fff}
+    .btn-success:hover{background:#219a52}
+    .btn-danger{background:#e74c3c;color:#fff}
+    .btn-danger:hover{background:#c0392b}
+    .inline-form{display:inline}
+    .search-box{padding:0.75rem 1.25rem;border-bottom:1px solid #eee}
+    .search-box input{width:100%;padding:0.5rem 0.75rem;border:1.5px solid #e0e0e0;border-radius:6px;font-size:0.85rem}
+    .search-box input:focus{outline:none;border-color:#0f3460}
+    .empty{text-align:center;padding:2rem;color:#aaa;font-size:0.85rem}
+    .text-muted{color:#999;font-size:0.8rem}
+    .truncate{max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   </style>
 </head>
 <body>
   <nav>
-    <h2>HOD Dashboard</h2>
-    <div>
+    <h2>HOD <span>ULK Appeal</span></h2>
+    <div class="nav-links">
       <a href="{{ url_for('hod_manage_results') }}">Manage Results</a>
-      <a href="{{ url_for('logout') }}">Logout ({{ session.username }})</a>
+      <a class="logout" href="{{ url_for('logout') }}">Logout {{ session.username }}</a>
     </div>
   </nav>
 
@@ -48,43 +69,60 @@
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         {% for category, msg in messages %}
-          <div class="flash {{ category }}">{{ msg }}</div>
+          <div class="flash {{ category }}">&#9432; {{ msg }}</div>
         {% endfor %}
       {% endif %}
     {% endwith %}
 
     <div class="stats">
-      {% for name, cnt in counts.items() %}
-      <div class="stat-card"><h3>{{ cnt }}</h3><p>{{ name }}</p></div>
-      {% endfor %}
+      {% if counts.get('Pending') %}<div class="stat-card orange"><div class="num">{{ counts['Pending'] }}</div><div class="lbl">Pending</div></div>{% endif %}
+      {% if counts.get('Approved') %}<div class="stat-card green"><div class="num">{{ counts['Approved'] }}</div><div class="lbl">Approved</div></div>{% endif %}
+      {% if counts.get('Rejected') %}<div class="stat-card red"><div class="num">{{ counts['Rejected'] }}</div><div class="lbl">Rejected</div></div>{% endif %}
     </div>
 
-    <div class="section">
-      <h3>Appeals</h3>
-      <table>
-        <tr><th>ID</th><th>Student</th><th>Module</th><th>Reason</th><th>Status</th><th>Date</th><th>Action</th></tr>
-        {% for a in appeals %}
-        <tr>
-          <td>{{ a.id }}</td>
-          <td>{{ a.student_id }}<br><small>{{ a.student_name }}</small></td>
-          <td>{{ a.module_name }}</td>
-          <td>{{ a.reason }}</td>
-          <td><span class="badge badge-{{ a.status.lower() }}">{{ a.status }}</span></td>
-          <td>{{ a.created_at }}</td>
-          <td>
-            {% if a.status == 'Pending' %}
-            <form class="inline-form" method="post" action="{{ url_for('hod_manage_appeal', appeal_id=a.id) }}">
-              <button class="btn btn-success" name="status" value="Approved">Approve</button>
-              <button class="btn btn-danger" name="status" value="Rejected">Reject</button>
-            </form>
-            {% else %}
-            {{ a.reviewed_by or '' }}
-            {% endif %}
-          </td>
-        </tr>
-        {% endfor %}
-      </table>
+    <div class="card">
+      <div class="card-header"><h3>Appeals</h3><span class="badge">{{ appeals|length }} total</span></div>
+      <div class="search-box"><input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Search by student, module, or reason..."></div>
+      <div class="card-body">
+        {% if appeals %}
+        <table id="appealsTable">
+          <tr><th>ID</th><th>Student</th><th>Module</th><th>Reason</th><th>Status</th><th>Date</th><th>Action</th></tr>
+          {% for a in appeals %}
+          <tr>
+            <td style="color:#999;font-size:0.8rem">{{ a.id }}</td>
+            <td>{{ a.student_id }}<br><span class="text-muted">{{ a.student_name[:25] }}</span></td>
+            <td class="truncate">{{ a.module_name }}</td>
+            <td class="truncate">{{ a.reason }}</td>
+            <td><span class="badge badge-{{ a.status.lower() }}">{{ a.status }}</span></td>
+            <td class="text-muted">{{ a.created_at[:10] }}</td>
+            <td>
+              {% if a.status == 'Pending' %}
+              <form class="inline-form" method="post" action="{{ url_for('hod_manage_appeal', appeal_id=a.id) }}" onsubmit="return confirm('Mark as {{ (a.status == 'Pending' and 'Approved' or 'Rejected') }}?')">
+                <button class="btn btn-success" name="status" value="Approved">Approve</button>
+                <button class="btn btn-danger" name="status" value="Rejected">Reject</button>
+              </form>
+              {% else %}
+              <span class="text-muted">by {{ a.reviewed_by or 'system' }}</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </table>
+        {% else %}<div class="empty">No appeals found.</div>{% endif %}
+      </div>
     </div>
   </div>
+
+  <script>
+    function filterTable(){
+      var input=document.getElementById('searchInput');
+      var filter=input.value.toLowerCase();
+      var rows=document.querySelectorAll('#appealsTable tr:not(:first-child)');
+      rows.forEach(function(row){
+        var text=row.textContent.toLowerCase();
+        row.style.display=text.includes(filter)?'':'none';
+      });
+    }
+  </script>
 </body>
 </html>

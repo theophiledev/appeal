@@ -5,32 +5,62 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Manage Results | ULK Appeal System</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Arial, sans-serif; background: #f0f2f5; color: #333; }
-    nav { background: #0f3460; color: #fff; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
-    nav h2 { font-size: 1.2rem; }
-    nav a { color: #fff; text-decoration: none; margin-left: 1.5rem; font-size: 0.9rem; }
-    nav a:hover { text-decoration: underline; }
-    .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
-    .section { background: #fff; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 2rem; }
-    .section h3 { margin-bottom: 1rem; color: #0f3460; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-    th, td { padding: 0.6rem; text-align: left; border-bottom: 1px solid #eee; }
-    th { background: #0f3460; color: #fff; }
-    .flash { padding: 0.8rem; margin-bottom: 1rem; border-radius: 6px; }
-    .flash.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-    .btn { display: inline-block; padding: 0.4rem 0.8rem; background: #0f3460; color: #fff; text-decoration: none; border-radius: 4px; font-size: 0.8rem; border: none; cursor: pointer; }
-    .btn-success { background: #28a745; }
-    input, select { padding: 0.4rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.85rem; }
-    .form-row { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;color:#333}
+    nav{background:#0f3460;color:#fff;padding:0 2rem;display:flex;justify-content:space-between;align-items:center;height:60px;position:sticky;top:0;z-index:100}
+    nav h2{font-size:1.15rem;display:flex;align-items:center;gap:8px}
+    nav h2 span{background:#e94560;font-size:0.65rem;padding:2px 8px;border-radius:10px;font-weight:400}
+    nav .nav-links{display:flex;align-items:center;gap:0.5rem}
+    nav .nav-links a{color:#ddd;text-decoration:none;font-size:0.85rem;padding:0.5rem 0.8rem;border-radius:6px;transition:all 0.2s}
+    nav .nav-links a:hover{background:rgba(255,255,255,0.1);color:#fff}
+    nav .nav-links .logout{background:#e94560;color:#fff;padding:0.4rem 1rem}
+    nav .nav-links .logout:hover{background:#c73e54}
+    .container{max-width:1300px;margin:1.5rem auto;padding:0 1.5rem}
+    .flash{padding:0.75rem 1rem;margin-bottom:1rem;border-radius:8px;font-size:0.85rem;display:flex;align-items:center;gap:8px;animation:slideIn 0.3s}
+    @keyframes slideIn{from{transform:translateY(-10px);opacity:0}to{transform:translateY(0);opacity:1}}
+    .flash.success{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
+    .card{background:#fff;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06);overflow:hidden;margin-bottom:1.5rem}
+    .card-header{display:flex;justify-content:space-between;align-items:center;padding:1rem 1.25rem;border-bottom:1px solid #eee}
+    .card-header h3{font-size:0.95rem;color:#0f3460;display:flex;align-items:center;gap:6px}
+    .card-body{padding:1.25rem}
+    .add-form{display:flex;gap:0.75rem;flex-wrap:wrap;align-items:flex-end}
+    .add-form label{font-size:0.78rem;color:#666;margin-bottom:4px;display:block}
+    .add-form .field{flex:1;min-width:160px}
+    .add-form input,.add-form select{width:100%;padding:0.5rem 0.75rem;border:1.5px solid #e0e0e0;border-radius:6px;font-size:0.85rem}
+    .add-form input:focus,.add-form select:focus{outline:none;border-color:#0f3460}
+    .btn{display:inline-flex;align-items:center;gap:4px;padding:0.45rem 1rem;border:none;border-radius:6px;font-size:0.8rem;cursor:pointer;text-decoration:none;transition:all 0.15s;font-weight:500}
+    .btn-primary{background:#0f3460;color:#fff}
+    .btn-primary:hover{background:#1a4a7a}
+    .btn-success{background:#27ae60;color:#fff}
+    .btn-success:hover{background:#219a52}
+    .btn-sm{padding:0.3rem 0.65rem;font-size:0.75rem}
+    .search-box{padding:0.75rem 1.25rem;border-bottom:1px solid #eee}
+    .search-box input{width:100%;padding:0.5rem 0.75rem;border:1.5px solid #e0e0e0;border-radius:6px;font-size:0.85rem}
+    .search-box input:focus{outline:none;border-color:#0f3460}
+    table{width:100%;border-collapse:collapse;font-size:0.85rem}
+    th{background:#f8f9fa;color:#555;font-weight:600;padding:0.7rem 1rem;text-align:left;border-bottom:2px solid #eee;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.5px}
+    td{padding:0.65rem 1rem;border-bottom:1px solid #f0f0f0;vertical-align:middle}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:#f8f9fa}
+    .grade{display:inline-block;font-weight:700;font-size:0.9rem;padding:2px 8px;border-radius:4px}
+    .grade-A,.grade-a{background:#d4edda;color:#155724}
+    .grade-B,.grade-b{background:#d6eaf8;color:#1a5276}
+    .grade-C,.grade-c{background:#fef9e7;color:#7d6608}
+    .grade-D,.grade-d{background:#fdebd0;color:#935116}
+    .grade-F,.grade-f{background:#f8d7da;color:#721c24}
+    .update-form{display:flex;gap:4px;align-items:center}
+    .update-form input{padding:0.35rem 0.5rem;border:1.5px solid #e0e0e0;border-radius:4px;font-size:0.8rem;width:60px}
+    .update-form input:focus{outline:none;border-color:#0f3460}
+    .empty{text-align:center;padding:2rem;color:#aaa;font-size:0.85rem}
+    .text-muted{color:#999;font-size:0.8rem}
   </style>
 </head>
 <body>
   <nav>
-    <h2>Manage Results</h2>
-    <div>
+    <h2>Results <span>ULK Appeal</span></h2>
+    <div class="nav-links">
       <a href="{{ url_for('hod_dashboard') }}">Dashboard</a>
-      <a href="{{ url_for('logout') }}">Logout ({{ session.username }})</a>
+      <a class="logout" href="{{ url_for('logout') }}">Logout {{ session.username }}</a>
     </div>
   </nav>
 
@@ -38,50 +68,75 @@
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         {% for category, msg in messages %}
-          <div class="flash {{ category }}">{{ msg }}</div>
+          <div class="flash {{ category }}">&#9432; {{ msg }}</div>
         {% endfor %}
       {% endif %}
     {% endwith %}
 
-    <div class="section">
-      <h3>Add New Mark</h3>
-      <form method="post" class="form-row">
-        <select name="student_id" required>
-          <option value="">-- Select Student --</option>
-          {% for s in students %}
-          <option value="{{ s.student_id }}">{{ s.student_id }} - {{ s.name }}</option>
-          {% endfor %}
-        </select>
-        <input name="module_name" placeholder="Module Name" required>
-        <input name="mark" placeholder="Mark (e.g. A, B, 75)" required>
-        <button class="btn btn-success" name="action" value="add">Add Mark</button>
-      </form>
+    <div class="card">
+      <div class="card-header"><h3>Add New Mark</h3></div>
+      <div class="card-body">
+        <form method="post" class="add-form">
+          <div class="field">
+            <label>Student</label>
+            <select name="student_id" required>
+              <option value="">-- Select --</option>
+              {% for s in students %}
+              <option value="{{ s.student_id }}">{{ s.student_id }} - {{ s.name[:30] }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="field">
+            <label>Module</label>
+            <input name="module_name" placeholder="e.g. Database Management" required>
+          </div>
+          <div class="field" style="min-width:100px">
+            <label>Mark</label>
+            <input name="mark" placeholder="e.g. A, 75" required>
+          </div>
+          <button class="btn btn-success" name="action" value="add">Add Mark</button>
+        </form>
+      </div>
     </div>
 
-    <div class="section">
-      <h3>All Results</h3>
-      <table>
-        <tr><th>ID</th><th>Student</th><th>Module</th><th>Mark</th><th>Updated By</th><th>Updated At</th><th>Action</th></tr>
-        {% for r in results %}
-        <tr>
-          <td>{{ r.id }}</td>
-          <td>{{ r.student_id }}<br><small>{{ r.name }}</small></td>
-          <td>{{ r.module_name }}</td>
-          <td>{{ r.mark }}</td>
-          <td>{{ r.updated_by or '' }}</td>
-          <td>{{ r.updated_at or '' }}</td>
-          <td>
-            <form method="post" class="form-row" style="margin:0;">
-              <input type="hidden" name="student_id" value="{{ r.student_id }}">
-              <input type="hidden" name="module_name" value="{{ r.module_name }}">
-              <input name="mark" value="{{ r.mark }}" style="width:60px;" required>
-              <button class="btn btn-success btn-sm" name="action" value="update">Update</button>
-            </form>
-          </td>
-        </tr>
-        {% endfor %}
-      </table>
+    <div class="card">
+      <div class="card-header"><h3>All Results</h3><span class="badge" style="background:#eee;padding:2px 10px;border-radius:12px;font-size:0.75rem;color:#666">{{ results|length }} records</span></div>
+      <div class="search-box"><input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Search by student, module, or mark..."></div>
+      <div class="card-body" style="padding:0">
+        {% if results %}
+        <table id="resultsTable">
+          <tr><th>Student</th><th>Module</th><th>Mark</th><th>Last Updated</th><th>Action</th></tr>
+          {% for r in results %}
+          <tr>
+            <td>{{ r.student_id }}<br><span class="text-muted">{{ r.name[:25] }}</span></td>
+            <td>{{ r.module_name }}</td>
+            <td><span class="grade grade-{{ r.mark[0]|upper }}">{{ r.mark }}</span></td>
+            <td class="text-muted">{{ r.updated_at[:10] if r.updated_at else '-' }}</td>
+            <td>
+              <form method="post" class="update-form">
+                <input type="hidden" name="student_id" value="{{ r.student_id }}">
+                <input type="hidden" name="module_name" value="{{ r.module_name }}">
+                <input name="mark" value="{{ r.mark }}" required>
+                <button class="btn btn-primary btn-sm" name="action" value="update">Update</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </table>
+        {% else %}<div class="empty">No results found.</div>{% endif %}
+      </div>
     </div>
   </div>
+
+  <script>
+    function filterTable(){
+      var input=document.getElementById('searchInput');
+      var filter=input.value.toLowerCase();
+      var rows=document.querySelectorAll('#resultsTable tr:not(:first-child)');
+      rows.forEach(function(row){
+        row.style.display=row.textContent.toLowerCase().includes(filter)?'':'none';
+      });
+    }
+  </script>
 </body>
 </html>

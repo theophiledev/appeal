@@ -226,12 +226,24 @@ def admin_dashboard():
     """)
     audit_log = c.fetchall()
 
+    # Recent appeals
+    c.execute("""
+        SELECT a.id, a.student_id, s.name, a.module_name, a.reason,
+               st.status_name, a.created_at
+        FROM   appeals a
+        JOIN   students s      ON a.student_id = s.student_id
+        JOIN   appeal_status st ON a.status_id = st.id
+        ORDER  BY a.id DESC LIMIT 10
+    """)
+    recent_appeals = c.fetchall()
+
     return render_template('admin_dashboard.html',
                            total_students=total_students,
                            total_appeals=total_appeals,
                            status_counts=status_counts,
                            accounts=accounts,
-                           audit_log=audit_log)
+                           audit_log=audit_log,
+                           recent_appeals=recent_appeals)
 
 
 @app.route('/admin/manage_accounts', methods=['GET', 'POST'])

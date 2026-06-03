@@ -5,33 +5,58 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>System Maintenance | ULK Appeal System</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Arial, sans-serif; background: #f0f2f5; color: #333; }
-    nav { background: #1a1a2e; color: #fff; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
-    nav h2 { font-size: 1.2rem; }
-    nav a { color: #fff; text-decoration: none; margin-left: 1.5rem; font-size: 0.9rem; }
-    nav a:hover { text-decoration: underline; }
-    .container { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
-    .section { background: #fff; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-    .section h3 { margin-bottom: 1rem; color: #1a1a2e; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-    th, td { padding: 0.6rem; text-align: left; border-bottom: 1px solid #eee; }
-    th { background: #1a1a2e; color: #fff; }
-    .flash { padding: 0.8rem; margin-bottom: 1rem; border-radius: 6px; }
-    .flash.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-    .btn { display: inline-block; padding: 0.4rem 0.8rem; background: #1a1a2e; color: #fff; border: none; border-radius: 4px; font-size: 0.8rem; cursor: pointer; text-decoration: none; }
-    .btn-success { background: #28a745; }
-    .locked { color: #e74c3c; font-weight: bold; }
-    .unlocked { color: #28a745; }
-    .inline-form { display: inline; }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;color:#333}
+    nav{background:#1a1a2e;color:#fff;padding:0 2rem;display:flex;justify-content:space-between;align-items:center;height:60px;position:sticky;top:0;z-index:100}
+    nav h2{font-size:1.15rem;display:flex;align-items:center;gap:8px}
+    nav h2 span{background:#e94560;font-size:0.65rem;padding:2px 8px;border-radius:10px;font-weight:400}
+    nav .nav-links{display:flex;align-items:center;gap:0.5rem}
+    nav .nav-links a{color:#ddd;text-decoration:none;font-size:0.85rem;padding:0.5rem 0.8rem;border-radius:6px;transition:all 0.2s}
+    nav .nav-links a:hover{background:rgba(255,255,255,0.1);color:#fff}
+    nav .nav-links .logout{background:#e94560;color:#fff;padding:0.4rem 1rem}
+    nav .nav-links .logout:hover{background:#c73e54}
+    .container{max-width:1100px;margin:1.5rem auto;padding:0 1.5rem}
+    .flash{padding:0.75rem 1rem;margin-bottom:1rem;border-radius:8px;font-size:0.85rem;display:flex;align-items:center;gap:8px;animation:slideIn 0.3s}
+    @keyframes slideIn{from{transform:translateY(-10px);opacity:0}to{transform:translateY(0);opacity:1}}
+    .flash.success{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
+    .card{background:#fff;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06);overflow:hidden}
+    .card-header{display:flex;justify-content:space-between;align-items:center;padding:1rem 1.25rem;border-bottom:1px solid #eee}
+    .card-header h3{font-size:0.95rem;color:#1a1a2e;display:flex;align-items:center;gap:6px}
+    .card-header .badge{background:#eee;padding:2px 10px;border-radius:12px;font-size:0.75rem;color:#666}
+    .search-box{padding:0.75rem 1.25rem;border-bottom:1px solid #eee}
+    .search-box input{width:100%;padding:0.5rem 0.75rem;border:1.5px solid #e0e0e0;border-radius:6px;font-size:0.85rem}
+    .search-box input:focus{outline:none;border-color:#1a1a2e}
+    .card-body{padding:0}
+    table{width:100%;border-collapse:collapse;font-size:0.85rem}
+    th{background:#f8f9fa;color:#555;font-weight:600;padding:0.7rem 1rem;text-align:left;border-bottom:2px solid #eee;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.5px}
+    td{padding:0.7rem 1rem;border-bottom:1px solid #f0f0f0;vertical-align:middle}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:#f8f9fa}
+    .status{display:flex;align-items:center;gap:6px;font-weight:600;font-size:0.85rem}
+    .status-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+    .dot-locked{background:#e74c3c}
+    .dot-active{background:#27ae60}
+    .text-locked{color:#e74c3c}
+    .text-active{color:#27ae60}
+    .btn{display:inline-flex;align-items:center;gap:4px;padding:0.4rem 0.8rem;border:none;border-radius:5px;font-size:0.75rem;cursor:pointer;text-decoration:none;transition:all 0.15s;font-weight:500}
+    .btn-success{background:#27ae60;color:#fff}
+    .btn-success:hover{background:#219a52}
+    .btn-sm{padding:0.3rem 0.65rem;font-size:0.72rem}
+    .empty{text-align:center;padding:2rem;color:#aaa;font-size:0.85rem}
+    .inline-form{display:inline}
+    .attempts-bar{background:#f0f0f0;border-radius:10px;height:6px;width:80px;display:inline-block;overflow:hidden;vertical-align:middle;margin-right:6px}
+    .attempts-fill{height:100%;border-radius:10px;transition:width 0.3s}
+    .attempts-fill.low{background:#27ae60}
+    .attempts-fill.medium{background:#e67e22}
+    .attempts-fill.high{background:#e74c3c}
   </style>
 </head>
 <body>
   <nav>
-    <h2>System Maintenance</h2>
-    <div>
+    <h2>Maintenance <span>ULK Appeal</span></h2>
+    <div class="nav-links">
       <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
-      <a href="{{ url_for('logout') }}">Logout ({{ session.username }})</a>
+      <a class="logout" href="{{ url_for('logout') }}">Logout {{ session.username }}</a>
     </div>
   </nav>
 
@@ -39,33 +64,62 @@
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         {% for category, msg in messages %}
-          <div class="flash {{ category }}">{{ msg }}</div>
+          <div class="flash {{ category }}">&#9432; {{ msg }}</div>
         {% endfor %}
       {% endif %}
     {% endwith %}
 
-    <div class="section">
-      <h3>PIN Credentials Status</h3>
-      <table>
-        <tr><th>Student ID</th><th>Name</th><th>Phone</th><th>Failed Attempts</th><th>Status</th><th>Action</th></tr>
-        {% for p in pin_status %}
-        <tr>
-          <td>{{ p.student_id }}</td>
-          <td>{{ p.name }}</td>
-          <td>{{ p.phone }}</td>
-          <td>{{ p.failed_attempts }}</td>
-          <td class="{{ 'locked' if p.locked else 'unlocked' }}">{{ 'Locked' if p.locked else 'Active' }}</td>
-          <td>
-            {% if p.locked %}
-            <form class="inline-form" method="post" action="{{ url_for('admin_unlock', student_id=p.student_id) }}">
-              <button class="btn btn-success">Unlock</button>
-            </form>
-            {% endif %}
-          </td>
-        </tr>
-        {% endfor %}
-      </table>
+    <div class="card">
+      <div class="card-header"><h3>PIN Credentials</h3><span class="badge">{{ pin_status|length }} students</span></div>
+      <div class="search-box"><input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Search by student ID, name, or phone..."></div>
+      <div class="card-body">
+        {% if pin_status %}
+        <table id="pinTable">
+          <tr><th>Student ID</th><th>Name</th><th>Phone</th><th>Attempts</th><th>Status</th><th>Action</th></tr>
+          {% for p in pin_status %}
+          {% set max_attempts = 3 %}
+          {% set pct = (p.failed_attempts / max_attempts * 100) | round %}
+          {% set bar_class = 'low' if p.failed_attempts == 0 else ('medium' if p.failed_attempts < max_attempts else 'high') %}
+          <tr>
+            <td><strong>{{ p.student_id }}</strong></td>
+            <td>{{ p.name[:30] }}</td>
+            <td>{{ p.phone }}</td>
+            <td>
+              <div class="attempts-bar"><div class="attempts-fill {{ bar_class }}" style="width:{{ pct if pct <= 100 else 100 }}%"></div></div>
+              {{ p.failed_attempts }}/{{ max_attempts }}
+            </td>
+            <td>
+              <span class="status">
+                <span class="status-dot {{ 'dot-locked' if p.locked else 'dot-active' }}"></span>
+                <span class="{{ 'text-locked' if p.locked else 'text-active' }}">{{ 'Locked' if p.locked else 'Active' }}</span>
+              </span>
+            </td>
+            <td>
+              {% if p.locked %}
+              <form class="inline-form" method="post" action="{{ url_for('admin_unlock', student_id=p.student_id) }}">
+                <button class="btn btn-success btn-sm">Unlock</button>
+              </form>
+              {% else %}
+              <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </table>
+        {% else %}<div class="empty">No student PIN records found.</div>{% endif %}
+      </div>
     </div>
   </div>
+
+  <script>
+    function filterTable(){
+      var input=document.getElementById('searchInput');
+      var filter=input.value.toLowerCase();
+      var rows=document.querySelectorAll('#pinTable tr:not(:first-child)');
+      rows.forEach(function(row){
+        row.style.display=row.textContent.toLowerCase().includes(filter)?'':'none';
+      });
+    }
+  </script>
 </body>
 </html>

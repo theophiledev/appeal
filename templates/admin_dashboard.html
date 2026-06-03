@@ -5,38 +5,74 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard | ULK Appeal System</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Arial, sans-serif; background: #f0f2f5; color: #333; }
-    nav { background: #1a1a2e; color: #fff; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
-    nav h2 { font-size: 1.2rem; }
-    nav a { color: #fff; text-decoration: none; margin-left: 1.5rem; font-size: 0.9rem; }
-    nav a:hover { text-decoration: underline; }
-    .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
-    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
-    .stat-card { background: #fff; padding: 1.2rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-align: center; }
-    .stat-card h3 { font-size: 2rem; color: #1a1a2e; }
-    .stat-card p { color: #666; font-size: 0.9rem; }
-    .section { background: #fff; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 2rem; }
-    .section h3 { margin-bottom: 1rem; color: #1a1a2e; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-    th, td { padding: 0.6rem; text-align: left; border-bottom: 1px solid #eee; }
-    th { background: #1a1a2e; color: #fff; }
-    .flash { padding: 0.8rem; margin-bottom: 1rem; border-radius: 6px; }
-    .flash.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-    .flash.warning { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
-    .btn { display: inline-block; padding: 0.5rem 1rem; background: #1a1a2e; color: #fff; text-decoration: none; border-radius: 6px; font-size: 0.85rem; border: none; cursor: pointer; }
-    .btn-sm { padding: 0.3rem 0.6rem; font-size: 0.8rem; }
-    .btn-danger { background: #e74c3c; }
-    .inline-form { display: inline; }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;color:#333}
+    nav{background:#1a1a2e;color:#fff;padding:0 2rem;display:flex;justify-content:space-between;align-items:center;height:60px;position:sticky;top:0;z-index:100}
+    nav h2{font-size:1.15rem;display:flex;align-items:center;gap:8px}
+    nav h2 span{background:#e94560;font-size:0.65rem;padding:2px 8px;border-radius:10px;font-weight:400}
+    nav .nav-links{display:flex;align-items:center;gap:0.5rem}
+    nav .nav-links a{color:#ddd;text-decoration:none;font-size:0.85rem;padding:0.5rem 0.8rem;border-radius:6px;transition:all 0.2s}
+    nav .nav-links a:hover{background:rgba(255,255,255,0.1);color:#fff}
+    nav .nav-links .logout{background:#e94560;color:#fff;padding:0.4rem 1rem}
+    nav .nav-links .logout:hover{background:#c73e54}
+    .container{max-width:1300px;margin:1.5rem auto;padding:0 1.5rem}
+    .flash{padding:0.75rem 1rem;margin-bottom:1rem;border-radius:8px;font-size:0.85rem;display:flex;align-items:center;gap:8px;animation:slideIn 0.3s}
+    @keyframes slideIn{from{transform:translateY(-10px);opacity:0}to{transform:translateY(0);opacity:1}}
+    .flash.success{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
+    .flash.warning{background:#fff3cd;color:#856404;border:1px solid #ffeeba}
+    .flash.danger{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb}
+    .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:1.5rem}
+    .stat-card{background:#fff;padding:1.2rem;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06);text-align:center;border-top:3px solid #1a1a2e;transition:transform 0.2s,box-shadow 0.2s}
+    .stat-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.1)}
+    .stat-card .num{font-size:2rem;font-weight:700;color:#1a1a2e}
+    .stat-card .lbl{color:#888;font-size:0.8rem;margin-top:2px}
+    .stat-card.orange{border-top-color:#e67e22}
+    .stat-card.green{border-top-color:#27ae60}
+    .stat-card.red{border-top-color:#e74c3c}
+    .stat-card.blue{border-top-color:#3498db}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem}
+    @media(max-width:900px){.grid-2{grid-template-columns:1fr}}
+    .card{background:#fff;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06);overflow:hidden}
+    .card-header{display:flex;justify-content:space-between;align-items:center;padding:1rem 1.25rem;border-bottom:1px solid #eee}
+    .card-header h3{font-size:0.95rem;color:#1a1a2e;display:flex;align-items:center;gap:6px}
+    .card-header .badge{background:#eee;padding:2px 10px;border-radius:12px;font-size:0.75rem;color:#666}
+    .card-body{padding:0}
+    table{width:100%;border-collapse:collapse;font-size:0.85rem}
+    th{background:#f8f9fa;color:#555;font-weight:600;padding:0.7rem 1rem;text-align:left;border-bottom:2px solid #eee;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.5px}
+    td{padding:0.7rem 1rem;border-bottom:1px solid #f0f0f0}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:#f8f9fa}
+    .btn{display:inline-flex;align-items:center;gap:4px;padding:0.45rem 1rem;border:none;border-radius:6px;font-size:0.8rem;cursor:pointer;text-decoration:none;transition:all 0.2s;font-weight:500}
+    .btn-primary{background:#1a1a2e;color:#fff}
+    .btn-primary:hover{background:#2d2d4a}
+    .btn-danger{background:#e74c3c;color:#fff}
+    .btn-danger:hover{background:#c0392b}
+    .btn-sm{padding:0.3rem 0.65rem;font-size:0.75rem}
+    .inline-form{display:inline}
+    .badge-status{display:inline-block;padding:2px 10px;border-radius:12px;font-size:0.72rem;font-weight:600}
+    .badge-pending{background:#fff3cd;color:#856404}
+    .badge-approved{background:#d4edda;color:#155724}
+    .badge-rejected{background:#f8d7da;color:#721c24}
+    .yesno{font-weight:600}
+    .yesno.yes{color:#27ae60}
+    .yesno.no{color:#e74c3c}
+    .role-badge{display:inline-block;padding:1px 8px;border-radius:10px;font-size:0.7rem;font-weight:600;text-transform:uppercase}
+    .role-admin{background:#1a1a2e;color:#fff}
+    .role-hod{background:#3498db;color:#fff}
+    .truncate{max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .empty{text-align:center;padding:2rem;color:#aaa;font-size:0.85rem}
+    .create-form{display:flex;gap:0.5rem;flex-wrap:wrap;padding:1rem 1.25rem}
+    .create-form input,.create-form select{padding:0.5rem 0.75rem;border:1.5px solid #e0e0e0;border-radius:6px;font-size:0.85rem;flex:1;min-width:140px}
+    .create-form input:focus,.create-form select:focus{outline:none;border-color:#1a1a2e}
+    .text-muted{color:#999;font-size:0.8rem}
   </style>
 </head>
 <body>
   <nav>
-    <h2>Admin Dashboard</h2>
-    <div>
-      <a href="{{ url_for('admin_manage_accounts') }}">Manage Accounts</a>
+    <h2>Admin <span>ULK Appeal</span></h2>
+    <div class="nav-links">
       <a href="{{ url_for('admin_system_maintenance') }}">Maintenance</a>
-      <a href="{{ url_for('logout') }}">Logout ({{ session.username }})</a>
+      <a class="logout" href="{{ url_for('logout') }}">Logout {{ session.username }}</a>
     </div>
   </nav>
 
@@ -44,69 +80,93 @@
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         {% for category, msg in messages %}
-          <div class="flash {{ category }}">{{ msg }}</div>
+          <div class="flash {{ category }}">&#9432; {{ msg }}</div>
         {% endfor %}
       {% endif %}
     {% endwith %}
 
     <div class="stats">
-      <div class="stat-card"><h3>{{ total_students }}</h3><p>Students</p></div>
-      <div class="stat-card"><h3>{{ total_appeals }}</h3><p>Appeals</p></div>
-      {% for name, cnt in status_counts.items() %}
-      <div class="stat-card"><h3>{{ cnt }}</h3><p>{{ name }}</p></div>
-      {% endfor %}
+      <div class="stat-card"><div class="num">{{ total_students }}</div><div class="lbl">Total Students</div></div>
+      <div class="stat-card orange"><div class="num">{{ total_appeals }}</div><div class="lbl">Total Appeals</div></div>
+      {% if status_counts.get('Pending') %}<div class="stat-card blue"><div class="num">{{ status_counts['Pending'] }}</div><div class="lbl">Pending</div></div>{% endif %}
+      {% if status_counts.get('Approved') %}<div class="stat-card green"><div class="num">{{ status_counts['Approved'] }}</div><div class="lbl">Approved</div></div>{% endif %}
+      {% if status_counts.get('Rejected') %}<div class="stat-card red"><div class="num">{{ status_counts['Rejected'] }}</div><div class="lbl">Rejected</div></div>{% endif %}
     </div>
 
-    <div class="section">
-      <h3>Create Account</h3>
-      <form method="post" action="{{ url_for('admin_manage_accounts') }}" style="display:flex; gap:0.5rem; flex-wrap:wrap;">
-        <input name="username" placeholder="Username" required style="padding:0.5rem;border:1px solid #ddd;border-radius:4px;">
-        <input type="password" name="password" placeholder="Password" required style="padding:0.5rem;border:1px solid #ddd;border-radius:4px;">
-        <select name="role" style="padding:0.5rem;border:1px solid #ddd;border-radius:4px;">
-          <option value="admin">Admin</option>
-          <option value="hod">HOD</option>
-        </select>
-        <button class="btn" name="action" value="create">Create</button>
+    <div class="card" style="margin-bottom:1.5rem">
+      <div class="card-header"><h3>&#43; Create Account</h3></div>
+      <form class="create-form" method="post" action="{{ url_for('admin_manage_accounts') }}">
+        <input name="username" placeholder="Username" required>
+        <input type="password" name="password" placeholder="Password" required>
+        <select name="role"><option value="admin">Admin</option><option value="hod">HOD</option></select>
+        <button class="btn btn-primary" name="action" value="create">Create</button>
       </form>
     </div>
 
-    <div class="section">
-      <h3>Accounts</h3>
-      <table>
-        <tr><th>ID</th><th>Username</th><th>Role</th><th>Created</th><th>Action</th></tr>
-        {% for a in accounts %}
-        <tr>
-          <td>{{ a.id }}</td>
-          <td>{{ a.username }}</td>
-          <td>{{ a.role }}</td>
-          <td>{{ a.created_at }}</td>
-          <td>
-            {% if a.id != session.admin_id %}
-            <form class="inline-form" method="post" action="{{ url_for('admin_manage_accounts') }}" onsubmit="return confirm('Delete this account?')">
-              <input type="hidden" name="account_id" value="{{ a.id }}">
-              <button class="btn btn-sm btn-danger" name="action" value="delete">Delete</button>
-            </form>
-            {% endif %}
-          </td>
-        </tr>
-        {% endfor %}
-      </table>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header"><h3>Accounts</h3><span class="badge">{{ accounts|length }}</span></div>
+        <div class="card-body">
+          {% if accounts %}
+          <table>
+            <tr><th>ID</th><th>Username</th><th>Role</th><th>Action</th></tr>
+            {% for a in accounts %}
+            <tr>
+              <td style="color:#999;font-size:0.8rem">{{ a.id }}</td>
+              <td><strong>{{ a.username }}</strong><br><span class="text-muted">{{ a.created_at[:10] }}</span></td>
+              <td><span class="role-badge role-{{ a.role }}">{{ a.role }}</span></td>
+              <td>
+                {% if a.id != session.admin_id %}
+                <form class="inline-form" method="post" action="{{ url_for('admin_manage_accounts') }}" onsubmit="return confirm('Delete {{ a.username }}?')">
+                  <input type="hidden" name="account_id" value="{{ a.id }}">
+                  <button class="btn btn-danger btn-sm" name="action" value="delete">Delete</button>
+                </form>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </table>
+          {% else %}<div class="empty">No accounts found.</div>{% endif %}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3>Recent Appeals</h3><span class="badge">{{ recent_appeals|length }}</span></div>
+        <div class="card-body">
+          {% if recent_appeals %}
+          <table>
+            <tr><th>Student</th><th>Module</th><th>Status</th></tr>
+            {% for a in recent_appeals %}
+            <tr>
+              <td>{{ a.student_id }}<br><span class="text-muted">{{ a.name[:20] }}</span></td>
+              <td class="truncate">{{ a.module_name }}</td>
+              <td><span class="badge-status badge-{{ a.status_name.lower() }}">{{ a.status_name }}</span></td>
+            </tr>
+            {% endfor %}
+          </table>
+          {% else %}<div class="empty">No appeals yet.</div>{% endif %}
+        </div>
+      </div>
     </div>
 
-    <div class="section">
-      <h3>Recent Audit Log</h3>
-      <table>
-        <tr><th>Student</th><th>Phone</th><th>Action</th><th>Success</th><th>Time</th></tr>
-        {% for log in audit_log %}
-        <tr>
-          <td>{{ log.student_id }}</td>
-          <td>{{ log.phone }}</td>
-          <td>{{ log.action }}</td>
-          <td>{{ 'Yes' if log.success else 'No' }}</td>
-          <td>{{ log.timestamp }}</td>
-        </tr>
-        {% endfor %}
-      </table>
+    <div class="card">
+      <div class="card-header"><h3>Audit Log</h3><span class="badge">Last 20</span></div>
+      <div class="card-body">
+        {% if audit_log %}
+        <table>
+          <tr><th>Student</th><th>Phone</th><th>Action</th><th>Status</th><th>Time</th></tr>
+          {% for log in audit_log %}
+          <tr>
+            <td>{{ log.student_id or '-' }}</td>
+            <td>{{ log.phone or '-' }}</td>
+            <td><code>{{ log.action }}</code></td>
+            <td><span class="yesno {{ 'yes' if log.success else 'no' }}">{{ 'Success' if log.success else 'Failed' }}</span></td>
+            <td class="text-muted">{{ log.timestamp }}</td>
+          </tr>
+          {% endfor %}
+        </table>
+        {% else %}<div class="empty">No audit records yet.</div>{% endif %}
+      </div>
     </div>
   </div>
 </body>
