@@ -229,7 +229,7 @@ def admin_dashboard():
     # Recent appeals
     c.execute("""
         SELECT a.id, a.student_id, s.name, a.module_name, a.reason,
-               st.status_name, a.created_at
+               a.review_comment, st.status_name, a.created_at
         FROM   appeals a
         JOIN   students s      ON a.student_id = s.student_id
         JOIN   appeal_status st ON a.status_id = st.id
@@ -370,7 +370,7 @@ def hod_dashboard():
     c = cur()
     c.execute("""
         SELECT a.id, a.student_id, st.name AS student_name,
-               a.module_name, a.reason, a.created_at,
+               a.module_name, a.reason, a.review_comment, a.created_at,
                s.status_name AS status
         FROM   appeals a
         JOIN   appeal_status s ON a.status_id = s.id
@@ -394,17 +394,25 @@ def hod_dashboard():
 def hod_manage_appeal(appeal_id):
     """HOD: update appeal status — Approved / Rejected / Pending."""
     new_status = request.form.get('status')
+    comment    = request.form.get('review_comment', '').strip()
+
+    if new_status == 'Rejected' and not comment:
+        flash('Please provide a reason for rejection.', 'danger')
+        return redirect(url_for('hod_dashboard'))
+
     c = cur()
     c.execute("SELECT id FROM appeal_status WHERE status_name=%s", (new_status,))
     row = c.fetchone()
     if row:
         c2 = cur(False)
-        c2.execute("UPDATE appeals SET status_id=%s, reviewed_by=%s WHERE id=%s",
-                   (row['id'], session['username'], appeal_id))
+        c2.execute(
+            "UPDATE appeals SET status_id=%s, reviewed_by=%s, review_comment=%s WHERE id=%s",
+            (row['id'], session['username'], comment if comment else None, appeal_id)
+        )
         mysql.connection.commit()
-        flash(f'✅ Appeal #{appeal_id} marked as {new_status}.', 'success')
+        flash(f'Appeal #{appeal_id} marked as {new_status}.', 'success')
     else:
-        flash('⚠️ Invalid status.', 'danger')
+        flash('Invalid status.', 'danger')
     return redirect(url_for('hod_dashboard'))
 
 
@@ -617,7 +625,8 @@ def ussd():
                     return _ussd(f"END {auth}")
                 c = cur()
                 c.execute("""
-                    SELECT a.module_name, s.status_name, a.reviewed_by, a.created_at
+                    SELECT a.module_name, s.status_name, a.reviewed_by,
+                           a.review_comment, a.created_at
                     FROM   appeals a
                     JOIN   appeal_status s ON a.status_id = s.id
                     WHERE  a.student_id=%s
@@ -629,7 +638,8 @@ def ussd():
                 body = "END Your recent appeals:\n"
                 for r in rows:
                     reviewed = f" (by {r['reviewed_by']})" if r['reviewed_by'] else ''
-                    body += f"{r['module_name']}: {r['status_name']}{reviewed}\n"
+                    comment = f" - {r['review_comment']}" if r['review_comment'] else ''
+                    body += f"{r['module_name']}: {r['status_name']}{reviewed}{comment}\n"
                 return _ussd(body.strip())
 
         # ════════════════════════════════════════════════════════════════════

@@ -48,7 +48,7 @@ INSERT IGNORE INTO marks (student_id, module_name, mark) VALUES
     ('2205000462', 'Web Development',        'F');
 
 -- ── Sample appeals (for demo) ──────────────────────────────────────────────
-INSERT IGNORE INTO appeals (student_id, module_name, reason, status_id) VALUES
-    ('2205000462', 'Web Development', 'I believe my final project was graded incorrectly. I submitted on time and met all requirements.', 1),
-    ('2205000462', 'Software Engineering', 'My group contribution was rated unfairly by peers.', 1),
-    ('2205000460', 'Web Development', 'I missed the exam due to sickness. I have a medical certificate.', 1);
+INSERT IGNORE INTO appeals (student_id, module_name, reason, status_id, review_comment) VALUES
+    ('2205000462', 'Web Development', 'I believe my final project was graded incorrectly. I submitted on time and met all requirements.', 1, NULL),
+    ('2205000462', 'Software Engineering', 'My group contribution was rated unfairly by peers.', 1, NULL),
+    ('2205000460', 'Web Development', 'I missed the exam due to sickness. I have a medical certificate.', 3, 'Medical certificate not submitted within the required 48-hour window.');

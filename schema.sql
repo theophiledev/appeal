@@ -43,13 +43,14 @@ INSERT IGNORE INTO appeal_status (id, status_name) VALUES
 
 -- ── Appeals ────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS appeals (
-    id          INT AUTO_INCREMENT PRIMARY KEY,
-    student_id  VARCHAR(50)  NOT NULL,
-    module_name VARCHAR(150) NOT NULL,
-    reason      TEXT         NOT NULL,
-    status_id   INT          NOT NULL DEFAULT 1,
-    reviewed_by VARCHAR(100) DEFAULT NULL,
-    created_at  DATETIME     DEFAULT CURRENT_TIMESTAMP,
+    id             INT AUTO_INCREMENT PRIMARY KEY,
+    student_id     VARCHAR(50)  NOT NULL,
+    module_name    VARCHAR(150) NOT NULL,
+    reason         TEXT         NOT NULL,
+    status_id      INT          NOT NULL DEFAULT 1,
+    reviewed_by    VARCHAR(100) DEFAULT NULL,
+    review_comment TEXT         DEFAULT NULL,
+    created_at     DATETIME     DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (student_id) REFERENCES students(student_id) ON DELETE CASCADE,
     FOREIGN KEY (status_id)  REFERENCES appeal_status(id)
 ) ENGINE=InnoDB;
