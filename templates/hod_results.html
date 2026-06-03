@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Results | ULK Appeal System</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: #f0f2f5; color: #333; }
+    nav { background: #0f3460; color: #fff; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    nav h2 { font-size: 1.2rem; }
+    nav a { color: #fff; text-decoration: none; margin-left: 1.5rem; font-size: 0.9rem; }
+    nav a:hover { text-decoration: underline; }
+    .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+    .section { background: #fff; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 2rem; }
+    .section h3 { margin-bottom: 1rem; color: #0f3460; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th, td { padding: 0.6rem; text-align: left; border-bottom: 1px solid #eee; }
+    th { background: #0f3460; color: #fff; }
+    .flash { padding: 0.8rem; margin-bottom: 1rem; border-radius: 6px; }
+    .flash.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .btn { display: inline-block; padding: 0.4rem 0.8rem; background: #0f3460; color: #fff; text-decoration: none; border-radius: 4px; font-size: 0.8rem; border: none; cursor: pointer; }
+    .btn-success { background: #28a745; }
+    input, select { padding: 0.4rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.85rem; }
+    .form-row { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <nav>
+    <h2>Manage Results</h2>
+    <div>
+      <a href="{{ url_for('hod_dashboard') }}">Dashboard</a>
+      <a href="{{ url_for('logout') }}">Logout ({{ session.username }})</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, msg in messages %}
+          <div class="flash {{ category }}">{{ msg }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="section">
+      <h3>Add New Mark</h3>
+      <form method="post" class="form-row">
+        <select name="student_id" required>
+          <option value="">-- Select Student --</option>
+          {% for s in students %}
+          <option value="{{ s.student_id }}">{{ s.student_id }} - {{ s.name }}</option>
+          {% endfor %}
+        </select>
+        <input name="module_name" placeholder="Module Name" required>
+        <input name="mark" placeholder="Mark (e.g. A, B, 75)" required>
+        <button class="btn btn-success" name="action" value="add">Add Mark</button>
+      </form>
+    </div>
+
+    <div class="section">
+      <h3>All Results</h3>
+      <table>
+        <tr><th>ID</th><th>Student</th><th>Module</th><th>Mark</th><th>Updated By</th><th>Updated At</th><th>Action</th></tr>
+        {% for r in results %}
+        <tr>
+          <td>{{ r.id }}</td>
+          <td>{{ r.student_id }}<br><small>{{ r.name }}</small></td>
+          <td>{{ r.module_name }}</td>
+          <td>{{ r.mark }}</td>
+          <td>{{ r.updated_by or '' }}</td>
+          <td>{{ r.updated_at or '' }}</td>
+          <td>
+            <form method="post" class="form-row" style="margin:0;">
+              <input type="hidden" name="student_id" value="{{ r.student_id }}">
+              <input type="hidden" name="module_name" value="{{ r.module_name }}">
+              <input name="mark" value="{{ r.mark }}" style="width:60px;" required>
+              <button class="btn btn-success btn-sm" name="action" value="update">Update</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+</body>
+</html>

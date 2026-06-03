@@ -1,0 +1,686 @@
+"""
+================================================================
+USSD-Based Marks Appeal System with PIN-Secured Student Authentication
+Case Study: University Libre de Kigali (ULK)
+
+Framework Actors:
+  - Admin  : login/logout, manage accounts, system maintenance
+  - HOD    : login/out, manage appeals, manage results
+  - Student: login/logout (PIN via USSD), view marks,
+             submit appeal, view results
+
+Author    : BIKORIMANA Jean Baptiste  |  Reg: 2205000458
+Supervisor: Mr. ISHIMWE Olivier Angel Kevin
+================================================================
+"""
+
+import os
+import hashlib
+import random
+import string
+from datetime import datetime, timedelta
+from functools import wraps
+
+from flask import (Flask, request, render_template, redirect,
+                   session, url_for, flash)
+from flask_mysqldb import MySQL
+import MySQLdb.cursors
+
+# ── optionally import Africa's Talking (graceful fallback for sandbox) ──────
+try:
+    import africastalking
+    africastalking.initialize(
+        username=os.environ.get('AT_USERNAME', 'sandbox'),
+        api_key=os.environ.get('AT_API_KEY', 'your-api-key')
+    )
+    at_sms = africastalking.SMS
+    AT_ENABLED = True
+except Exception:
+    AT_ENABLED = False
+
+# ─────────────────────────────────────────────────────────────────────────────
+app = Flask(__name__)
+app.secret_key = os.environ.get('SECRET_KEY', 'ulk-appeal-secret-change-in-prod')
+
+# ── MySQL ─────────────────────────────────────────────────────────────────────
+app.config['MYSQL_HOST']     = os.environ.get('MYSQL_HOST',     'localhost')
+app.config['MYSQL_USER']     = os.environ.get('MYSQL_USER',     'root')
+app.config['MYSQL_PASSWORD'] = os.environ.get('MYSQL_PASSWORD', '')
+app.config['MYSQL_DB']       = os.environ.get('MYSQL_DB',       'appeal_db')
+app.config['MYSQL_PORT']     = int(os.environ.get('MYSQL_PORT', 3306))
+
+mysql = MySQL(app)
+
+# ── In-memory OTP store (use Redis in production) ────────────────────────────
+_otp_store: dict = {}   # phone -> { otp, expires }
+
+MAX_PIN_ATTEMPTS = 3
+
+# =============================================================================
+# UTILITY HELPERS
+# =============================================================================
+
+def sha256(text: str) -> str:
+    return hashlib.sha256(text.encode()).hexdigest()
+
+
+def cur(dict_cursor=True):
+    """Return a fresh cursor (DictCursor by default)."""
+    if dict_cursor:
+        return mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    return mysql.connection.cursor()
+
+
+def log_access(student_id: str, phone: str, action: str, success: bool):
+    c = cur(False)
+    c.execute(
+        "INSERT INTO access_audit (student_id, phone, action, success, timestamp) "
+        "VALUES (%s, %s, %s, %s, NOW())",
+        (student_id, phone, action, int(success))
+    )
+    mysql.connection.commit()
+
+
+def send_otp(phone: str) -> str:
+    otp = ''.join(random.choices(string.digits, k=6))
+    _otp_store[phone] = {
+        'otp': otp,
+        'expires': datetime.now() + timedelta(minutes=10)
+    }
+    if AT_ENABLED:
+        try:
+            at_sms.send(
+                f"ULK Marks Appeal: Your PIN reset OTP is {otp}. "
+                "Valid for 10 minutes. Do not share this code.",
+                [phone]
+            )
+        except Exception as e:
+            app.logger.error(f"[SMS] {e}")
+    return otp
+
+
+def verify_otp(phone: str, provided: str) -> bool:
+    rec = _otp_store.get(phone)
+    if not rec:
+        return False
+    if datetime.now() > rec['expires']:
+        _otp_store.pop(phone, None)
+        return False
+    if rec['otp'] == provided:
+        _otp_store.pop(phone, None)
+        return True
+    return False
+
+
+# =============================================================================
+# AUTH DECORATORS
+# =============================================================================
+
+def admin_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get('loggedin') or session.get('role') != 'admin':
+            flash('Please log in as Admin.', 'warning')
+            return redirect(url_for('admin_login'))
+        return f(*args, **kwargs)
+    return decorated
+
+
+def hod_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get('loggedin') or session.get('role') != 'hod':
+            flash('Please log in as HOD.', 'warning')
+            return redirect(url_for('hod_login'))
+        return f(*args, **kwargs)
+    return decorated
+
+
+# =============================================================================
+# ── ADMIN PORTAL ─────────────────────────────────────────────────────────────
+# Actor: Admin  |  login/logout · manage accounts · system maintenance
+# =============================================================================
+
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    if session.get('loggedin') and session.get('role') == 'admin':
+        return redirect(url_for('admin_dashboard'))
+    msg = ''
+    if request.method == 'POST':
+        username = request.form['username']
+        password = sha256(request.form['password'])
+        c = cur()
+        c.execute(
+            "SELECT * FROM admins WHERE username=%s AND password=%s AND role='admin'",
+            (username, password)
+        )
+        admin = c.fetchone()
+        if admin:
+            session.update({'loggedin': True, 'username': admin['username'],
+                            'role': 'admin', 'admin_id': admin['id']})
+            return redirect(url_for('admin_dashboard'))
+        msg = '⚠️ Incorrect username or password.'
+    return render_template('admin_login.html', msg=msg)
+
+
+@app.route('/admin/dashboard')
+@admin_required
+def admin_dashboard():
+    c = cur()
+    # System-wide stats
+    c.execute("SELECT COUNT(*) AS cnt FROM students")
+    total_students = c.fetchone()['cnt']
+
+    c.execute("SELECT COUNT(*) AS cnt FROM appeals")
+    total_appeals = c.fetchone()['cnt']
+
+    c.execute("""
+        SELECT s.status_name, COUNT(*) AS cnt
+        FROM   appeals a JOIN appeal_status s ON a.status_id = s.id
+        GROUP  BY s.status_name
+    """)
+    status_counts = {r['status_name']: r['cnt'] for r in c.fetchall()}
+
+    # All admin accounts
+    c.execute("SELECT id, username, role, created_at FROM admins ORDER BY id")
+    accounts = c.fetchall()
+
+    # Recent audit log
+    c.execute("""
+        SELECT student_id, phone, action, success, timestamp
+        FROM   access_audit
+        ORDER  BY id DESC LIMIT 20
+    """)
+    audit_log = c.fetchall()
+
+    return render_template('admin_dashboard.html',
+                           total_students=total_students,
+                           total_appeals=total_appeals,
+                           status_counts=status_counts,
+                           accounts=accounts,
+                           audit_log=audit_log)
+
+
+@app.route('/admin/manage_accounts', methods=['GET', 'POST'])
+@admin_required
+def admin_manage_accounts():
+    """Admin: create / deactivate Admin and HOD accounts."""
+    msg = ''
+    if request.method == 'POST':
+        action = request.form.get('action')
+
+        if action == 'create':
+            username = request.form['username']
+            password = sha256(request.form['password'])
+            role     = request.form['role']          # 'admin' or 'hod'
+            c = cur(False)
+            c.execute(
+                "INSERT INTO admins (username, password, role, created_at) "
+                "VALUES (%s, %s, %s, NOW())",
+                (username, password, role)
+            )
+            mysql.connection.commit()
+            flash(f'✅ Account "{username}" ({role}) created.', 'success')
+
+        elif action == 'delete':
+            account_id = request.form['account_id']
+            c = cur(False)
+            c.execute("DELETE FROM admins WHERE id=%s AND id != %s",
+                      (account_id, session['admin_id']))
+            mysql.connection.commit()
+            flash('🗑️ Account removed.', 'success')
+
+    return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/admin/system_maintenance')
+@admin_required
+def admin_system_maintenance():
+    """Admin: system maintenance — view all locked students, unlock accounts."""
+    c = cur()
+    c.execute("""
+        SELECT p.student_id, s.name, s.phone, p.failed_attempts, p.locked
+        FROM   pin_credentials p
+        JOIN   students s ON p.student_id = s.student_id
+        ORDER  BY p.locked DESC, p.failed_attempts DESC
+    """)
+    pin_status = c.fetchall()
+    return render_template('admin_maintenance.html', pin_status=pin_status)
+
+
+@app.route('/admin/unlock/<student_id>', methods=['POST'])
+@admin_required
+def admin_unlock(student_id):
+    c = cur(False)
+    c.execute(
+        "UPDATE pin_credentials SET locked=0, failed_attempts=0 WHERE student_id=%s",
+        (student_id,)
+    )
+    mysql.connection.commit()
+    flash(f'✅ Account for {student_id} has been unlocked.', 'success')
+    return redirect(url_for('admin_system_maintenance'))
+
+
+# =============================================================================
+# ── HOD PORTAL ───────────────────────────────────────────────────────────────
+# Actor: HOD  |  login/out · manage appeals · manage results
+# =============================================================================
+
+@app.route('/hod/login', methods=['GET', 'POST'])
+def hod_login():
+    if session.get('loggedin') and session.get('role') == 'hod':
+        return redirect(url_for('hod_dashboard'))
+    msg = ''
+    if request.method == 'POST':
+        username = request.form['username']
+        password = sha256(request.form['password'])
+        c = cur()
+        c.execute(
+            "SELECT * FROM admins WHERE username=%s AND password=%s AND role='hod'",
+            (username, password)
+        )
+        hod = c.fetchone()
+        if hod:
+            session.update({'loggedin': True, 'username': hod['username'],
+                            'role': 'hod', 'hod_id': hod['id']})
+            return redirect(url_for('hod_dashboard'))
+        msg = '⚠️ Incorrect username or password.'
+    return render_template('hod_login.html', msg=msg)
+
+
+@app.route('/hod/dashboard')
+@hod_required
+def hod_dashboard():
+    c = cur()
+    c.execute("""
+        SELECT a.id, a.student_id, st.name AS student_name,
+               a.module_name, a.reason, a.created_at,
+               s.status_name AS status
+        FROM   appeals a
+        JOIN   appeal_status s ON a.status_id = s.id
+        JOIN   students st     ON a.student_id = st.student_id
+        ORDER  BY a.id DESC
+    """)
+    appeals = c.fetchall()
+
+    c.execute("""
+        SELECT s.status_name, COUNT(*) AS cnt
+        FROM   appeals a JOIN appeal_status s ON a.status_id = s.id
+        GROUP  BY s.status_name
+    """)
+    counts = {r['status_name']: r['cnt'] for r in c.fetchall()}
+
+    return render_template('hod_dashboard.html', appeals=appeals, counts=counts)
+
+
+@app.route('/hod/manage_appeal/<int:appeal_id>', methods=['POST'])
+@hod_required
+def hod_manage_appeal(appeal_id):
+    """HOD: update appeal status — Approved / Rejected / Pending."""
+    new_status = request.form.get('status')
+    c = cur()
+    c.execute("SELECT id FROM appeal_status WHERE status_name=%s", (new_status,))
+    row = c.fetchone()
+    if row:
+        c2 = cur(False)
+        c2.execute("UPDATE appeals SET status_id=%s, reviewed_by=%s WHERE id=%s",
+                   (row['id'], session['username'], appeal_id))
+        mysql.connection.commit()
+        flash(f'✅ Appeal #{appeal_id} marked as {new_status}.', 'success')
+    else:
+        flash('⚠️ Invalid status.', 'danger')
+    return redirect(url_for('hod_dashboard'))
+
+
+@app.route('/hod/manage_results', methods=['GET', 'POST'])
+@hod_required
+def hod_manage_results():
+    """HOD: view and update student marks (results)."""
+    c = cur()
+
+    if request.method == 'POST':
+        action = request.form.get('action')
+        if action == 'update':
+            student_id  = request.form['student_id']
+            module_name = request.form['module_name']
+            new_mark    = request.form['mark']
+            c2 = cur(False)
+            c2.execute(
+                "UPDATE marks SET mark=%s, updated_by=%s, updated_at=NOW() "
+                "WHERE student_id=%s AND module_name=%s",
+                (new_mark, session['username'], student_id, module_name)
+            )
+            mysql.connection.commit()
+            flash(f'✅ Mark updated for {student_id} — {module_name}: {new_mark}', 'success')
+
+        elif action == 'add':
+            student_id  = request.form['student_id']
+            module_name = request.form['module_name']
+            mark        = request.form['mark']
+            c2 = cur(False)
+            c2.execute(
+                "INSERT INTO marks (student_id, module_name, mark) VALUES (%s, %s, %s)",
+                (student_id, module_name, mark)
+            )
+            mysql.connection.commit()
+            flash('✅ Mark added.', 'success')
+
+    # Fetch all student results
+    c.execute("""
+        SELECT m.id, m.student_id, s.name, m.module_name, m.mark,
+               m.updated_by, m.updated_at
+        FROM   marks m
+        JOIN   students s ON m.student_id = s.student_id
+        ORDER  BY m.student_id, m.module_name
+    """)
+    results = c.fetchall()
+
+    c.execute("SELECT student_id, name FROM students ORDER BY name")
+    students = c.fetchall()
+
+    return render_template('hod_results.html', results=results, students=students)
+
+
+# =============================================================================
+# ── SHARED LOGOUT ─────────────────────────────────────────────────────────────
+# =============================================================================
+
+@app.route('/logout')
+def logout():
+    role = session.get('role', 'admin')
+    session.clear()
+    if role == 'hod':
+        return redirect(url_for('hod_login'))
+    return redirect(url_for('admin_login'))
+
+
+# =============================================================================
+# ── USSD ENDPOINT ─────────────────────────────────────────────────────────────
+# Actor: Student  |  login/logout · view marks · submit appeal · view results
+# =============================================================================
+
+def _ussd(text):
+    return text, 200, {'Content-Type': 'text/plain'}
+
+
+@app.route('/ussd', methods=['POST'])
+def ussd():
+    phone_number = request.form.get('phoneNumber', '')
+    text         = request.form.get('text', '')
+    steps        = text.split('*') if text else ['']
+
+    try:
+        # ── WELCOME MENU ─────────────────────────────────────────────────────
+        if text == '':
+            return _ussd(
+                "CON Welcome to ULK Marks Appeal System\n"
+                "1. View my marks\n"
+                "2. Submit an appeal\n"
+                "3. Check appeal status\n"
+                "4. Reset my PIN\n"
+                "0. Exit"
+            )
+
+        if text == '0':
+            return _ussd("END Thank you for using the ULK Marks Appeal System.")
+
+        # ════════════════════════════════════════════════════════════════════
+        # 1. VIEW MARKS  (Student: view marks / view results)
+        #    Flow: 1 -> student_id -> PIN
+        # ════════════════════════════════════════════════════════════════════
+        if steps[0] == '1':
+            if len(steps) == 1:
+                return _ussd("CON Enter your Student ID:\n0. Back")
+            if len(steps) == 2:
+                if steps[1] == '0':
+                    return _ussd(_main_menu())
+                return _ussd("CON Enter your 4-digit PIN:\n0. Back")
+            if len(steps) == 3:
+                if steps[2] == '0':
+                    return _ussd("CON Enter your Student ID:\n0. Back")
+                student_id = steps[1]
+                auth = _authenticate_student(student_id, steps[2], phone_number)
+                if auth != 'OK':
+                    return _ussd(f"END {auth}")
+                c = cur()
+                c.execute(
+                    "SELECT module_name, mark FROM marks WHERE student_id=%s ORDER BY module_name",
+                    (student_id,)
+                )
+                rows = c.fetchall()
+                if not rows:
+                    return _ussd("END No results found for your Student ID.")
+                body = "\n".join(f"{r['module_name']}: {r['mark']}" for r in rows)
+                return _ussd(f"END Your Results:\n{body}")
+
+        # ════════════════════════════════════════════════════════════════════
+        # 2. SUBMIT APPEAL  (Student: submit appeal)
+        #    Flow: 2 -> student_id -> PIN -> module_no -> reason
+        # ════════════════════════════════════════════════════════════════════
+        if steps[0] == '2':
+            if len(steps) == 1:
+                return _ussd("CON Enter your Student ID:\n0. Back")
+            if len(steps) == 2:
+                if steps[1] == '0':
+                    return _ussd(_main_menu())
+                return _ussd("CON Enter your 4-digit PIN:\n0. Back")
+            if len(steps) == 3:
+                if steps[2] == '0':
+                    return _ussd("CON Enter your Student ID:\n0. Back")
+                student_id = steps[1]
+                auth = _authenticate_student(student_id, steps[2], phone_number)
+                if auth != 'OK':
+                    return _ussd(f"END {auth}")
+                c = cur()
+                c.execute(
+                    "SELECT module_name, mark FROM marks WHERE student_id=%s",
+                    (student_id,)
+                )
+                modules = c.fetchall()
+                if not modules:
+                    return _ussd("END No modules found for your Student ID.")
+                menu = "CON Select module to appeal:\n"
+                for i, m in enumerate(modules, 1):
+                    menu += f"{i}. {m['module_name']} ({m['mark']})\n"
+                menu += "0. Back"
+                return _ussd(menu)
+            if len(steps) == 4:
+                if steps[3] == '0':
+                    return _ussd(_main_menu())
+                return _ussd("CON Enter your reason for appeal:\n0. Cancel")
+            if len(steps) == 5:
+                if steps[4] == '0':
+                    return _ussd(_main_menu())
+                student_id   = steps[1]
+                module_index = int(steps[3]) - 1
+                reason       = steps[4]
+                c = cur()
+                c.execute(
+                    "SELECT module_name FROM marks WHERE student_id=%s",
+                    (student_id,)
+                )
+                modules = [r['module_name'] for r in c.fetchall()]
+                if module_index < 0 or module_index >= len(modules):
+                    return _ussd("END Invalid module selection. Please try again.")
+                selected = modules[module_index]
+                c.execute(
+                    "SELECT id FROM appeal_status WHERE status_name='Pending'"
+                )
+                status_row = c.fetchone()
+                status_id  = status_row['id'] if status_row else 1
+                c2 = cur(False)
+                c2.execute(
+                    "INSERT INTO appeals (student_id, module_name, reason, status_id, created_at) "
+                    "VALUES (%s, %s, %s, %s, NOW())",
+                    (student_id, selected, reason, status_id)
+                )
+                log_access(student_id, phone_number, 'APPEAL_SUBMIT', True)
+                mysql.connection.commit()
+                return _ussd(
+                    f"END Appeal submitted for {selected}.\n"
+                    "Your HOD will review it shortly. Thank you."
+                )
+
+        # ════════════════════════════════════════════════════════════════════
+        # 3. CHECK APPEAL STATUS  (Student: view results)
+        #    Flow: 3 -> student_id -> PIN
+        # ════════════════════════════════════════════════════════════════════
+        if steps[0] == '3':
+            if len(steps) == 1:
+                return _ussd("CON Enter your Student ID:\n0. Back")
+            if len(steps) == 2:
+                if steps[1] == '0':
+                    return _ussd(_main_menu())
+                return _ussd("CON Enter your 4-digit PIN:\n0. Back")
+            if len(steps) == 3:
+                if steps[2] == '0':
+                    return _ussd("CON Enter your Student ID:\n0. Back")
+                student_id = steps[1]
+                auth = _authenticate_student(student_id, steps[2], phone_number)
+                if auth != 'OK':
+                    return _ussd(f"END {auth}")
+                c = cur()
+                c.execute("""
+                    SELECT a.module_name, s.status_name, a.reviewed_by, a.created_at
+                    FROM   appeals a
+                    JOIN   appeal_status s ON a.status_id = s.id
+                    WHERE  a.student_id=%s
+                    ORDER  BY a.id DESC LIMIT 3
+                """, (student_id,))
+                rows = c.fetchall()
+                if not rows:
+                    return _ussd("END No appeals found for your Student ID.")
+                body = "END Your recent appeals:\n"
+                for r in rows:
+                    reviewed = f" (by {r['reviewed_by']})" if r['reviewed_by'] else ''
+                    body += f"{r['module_name']}: {r['status_name']}{reviewed}\n"
+                return _ussd(body.strip())
+
+        # ════════════════════════════════════════════════════════════════════
+        # 4. RESET PIN  (Student: login/logout — recover access)
+        #    Flow: 4 -> student_id -> OTP -> new_pin -> confirm_pin
+        # ════════════════════════════════════════════════════════════════════
+        if steps[0] == '4':
+            if len(steps) == 1:
+                return _ussd("CON Enter your Student ID to reset PIN:\n0. Back")
+            if len(steps) == 2:
+                if steps[1] == '0':
+                    return _ussd(_main_menu())
+                student_id = steps[1]
+                c = cur()
+                c.execute("SELECT phone FROM students WHERE student_id=%s", (student_id,))
+                st = c.fetchone()
+                if not st:
+                    return _ussd("END Student ID not found.")
+                send_otp(st['phone'])
+                return _ussd(
+                    "CON An OTP has been sent to your registered number.\n"
+                    "Enter the OTP:"
+                )
+            if len(steps) == 3:
+                student_id = steps[1]
+                c = cur()
+                c.execute("SELECT phone FROM students WHERE student_id=%s", (student_id,))
+                st = c.fetchone()
+                if not st or not verify_otp(st['phone'], steps[2]):
+                    return _ussd("END Invalid or expired OTP. Please restart.")
+                return _ussd("CON OTP verified. Enter your new 4-digit PIN:")
+            if len(steps) == 4:
+                if len(steps[3]) != 4 or not steps[3].isdigit():
+                    return _ussd("END PIN must be exactly 4 digits. Please restart.")
+                return _ussd("CON Confirm your new PIN:")
+            if len(steps) == 5:
+                if steps[3] != steps[4]:
+                    return _ussd("END PINs do not match. Please restart.")
+                pin_hash = sha256(steps[3])
+                c2 = cur(False)
+                c2.execute("""
+                    INSERT INTO pin_credentials (student_id, pin_hash, failed_attempts, locked, created_at)
+                    VALUES (%s, %s, 0, 0, NOW())
+                    ON DUPLICATE KEY UPDATE pin_hash=VALUES(pin_hash),
+                                            failed_attempts=0, locked=0
+                """, (steps[1], pin_hash))
+                mysql.connection.commit()
+                return _ussd("END PIN reset successfully. You may now log in.")
+
+        return _ussd("END Invalid input. Please dial again.")
+
+    except Exception as exc:
+        app.logger.error(f"[USSD] {exc}")
+        return _ussd("END Technical error. Please try again later.")
+
+
+# =============================================================================
+# STUDENT AUTHENTICATION HELPER
+# =============================================================================
+
+def _authenticate_student(student_id: str, pin: str, phone: str) -> str:
+    """
+    Verify student PIN.
+    Returns 'OK' on success, or a user-facing error message.
+    """
+    c = cur()
+    c.execute(
+        "SELECT pin_hash, failed_attempts, locked FROM pin_credentials WHERE student_id=%s",
+        (student_id,)
+    )
+    row = c.fetchone()
+
+    if not row:
+        return ("No PIN found. Contact admin or use option 4 to set your PIN.")
+
+    if row['locked']:
+        log_access(student_id, phone, 'LOGIN_LOCKED', False)
+        return ("Account locked. Use option 4 to reset your PIN via OTP.")
+
+    if sha256(pin) == row['pin_hash']:
+        c2 = cur(False)
+        c2.execute(
+            "UPDATE pin_credentials SET failed_attempts=0 WHERE student_id=%s",
+            (student_id,)
+        )
+        log_access(student_id, phone, 'LOGIN_SUCCESS', True)
+        mysql.connection.commit()
+        return 'OK'
+
+    # Wrong PIN
+    new_fails = row['failed_attempts'] + 1
+    locked    = 1 if new_fails >= MAX_PIN_ATTEMPTS else 0
+    c2 = cur(False)
+    c2.execute(
+        "UPDATE pin_credentials SET failed_attempts=%s, locked=%s WHERE student_id=%s",
+        (new_fails, locked, student_id)
+    )
+    log_access(student_id, phone, 'LOGIN_FAILED', False)
+    mysql.connection.commit()
+
+    if locked:
+        return ("Account locked after 3 failed attempts. Use option 4 to reset PIN.")
+    remaining = MAX_PIN_ATTEMPTS - new_fails
+    return f"Wrong PIN. {remaining} attempt(s) remaining."
+
+
+def _main_menu() -> str:
+    return (
+        "CON Welcome to ULK Marks Appeal System\n"
+        "1. View my marks\n"
+        "2. Submit an appeal\n"
+        "3. Check appeal status\n"
+        "4. Reset my PIN\n"
+        "0. Exit"
+    )
+
+
+# =============================================================================
+# ROOT REDIRECT
+# =============================================================================
+
+@app.route('/')
+def index():
+    return redirect(url_for('admin_login'))
+
+
+# =============================================================================
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    app.run(debug=False, host='0.0.0.0', port=port)

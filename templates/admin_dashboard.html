@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | ULK Appeal System</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: #f0f2f5; color: #333; }
+    nav { background: #1a1a2e; color: #fff; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    nav h2 { font-size: 1.2rem; }
+    nav a { color: #fff; text-decoration: none; margin-left: 1.5rem; font-size: 0.9rem; }
+    nav a:hover { text-decoration: underline; }
+    .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .stat-card { background: #fff; padding: 1.2rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-align: center; }
+    .stat-card h3 { font-size: 2rem; color: #1a1a2e; }
+    .stat-card p { color: #666; font-size: 0.9rem; }
+    .section { background: #fff; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 2rem; }
+    .section h3 { margin-bottom: 1rem; color: #1a1a2e; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th, td { padding: 0.6rem; text-align: left; border-bottom: 1px solid #eee; }
+    th { background: #1a1a2e; color: #fff; }
+    .flash { padding: 0.8rem; margin-bottom: 1rem; border-radius: 6px; }
+    .flash.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .flash.warning { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+    .btn { display: inline-block; padding: 0.5rem 1rem; background: #1a1a2e; color: #fff; text-decoration: none; border-radius: 6px; font-size: 0.85rem; border: none; cursor: pointer; }
+    .btn-sm { padding: 0.3rem 0.6rem; font-size: 0.8rem; }
+    .btn-danger { background: #e74c3c; }
+    .inline-form { display: inline; }
+  </style>
+</head>
+<body>
+  <nav>
+    <h2>Admin Dashboard</h2>
+    <div>
+      <a href="{{ url_for('admin_manage_accounts') }}">Manage Accounts</a>
+      <a href="{{ url_for('admin_system_maintenance') }}">Maintenance</a>
+      <a href="{{ url_for('logout') }}">Logout ({{ session.username }})</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, msg in messages %}
+          <div class="flash {{ category }}">{{ msg }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="stats">
+      <div class="stat-card"><h3>{{ total_students }}</h3><p>Students</p></div>
+      <div class="stat-card"><h3>{{ total_appeals }}</h3><p>Appeals</p></div>
+      {% for name, cnt in status_counts.items() %}
+      <div class="stat-card"><h3>{{ cnt }}</h3><p>{{ name }}</p></div>
+      {% endfor %}
+    </div>
+
+    <div class="section">
+      <h3>Create Account</h3>
+      <form method="post" action="{{ url_for('admin_manage_accounts') }}" style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+        <input name="username" placeholder="Username" required style="padding:0.5rem;border:1px solid #ddd;border-radius:4px;">
+        <input type="password" name="password" placeholder="Password" required style="padding:0.5rem;border:1px solid #ddd;border-radius:4px;">
+        <select name="role" style="padding:0.5rem;border:1px solid #ddd;border-radius:4px;">
+          <option value="admin">Admin</option>
+          <option value="hod">HOD</option>
+        </select>
+        <button class="btn" name="action" value="create">Create</button>
+      </form>
+    </div>
+
+    <div class="section">
+      <h3>Accounts</h3>
+      <table>
+        <tr><th>ID</th><th>Username</th><th>Role</th><th>Created</th><th>Action</th></tr>
+        {% for a in accounts %}
+        <tr>
+          <td>{{ a.id }}</td>
+          <td>{{ a.username }}</td>
+          <td>{{ a.role }}</td>
+          <td>{{ a.created_at }}</td>
+          <td>
+            {% if a.id != session.admin_id %}
+            <form class="inline-form" method="post" action="{{ url_for('admin_manage_accounts') }}" onsubmit="return confirm('Delete this account?')">
+              <input type="hidden" name="account_id" value="{{ a.id }}">
+              <button class="btn btn-sm btn-danger" name="action" value="delete">Delete</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+
+    <div class="section">
+      <h3>Recent Audit Log</h3>
+      <table>
+        <tr><th>Student</th><th>Phone</th><th>Action</th><th>Success</th><th>Time</th></tr>
+        {% for log in audit_log %}
+        <tr>
+          <td>{{ log.student_id }}</td>
+          <td>{{ log.phone }}</td>
+          <td>{{ log.action }}</td>
+          <td>{{ 'Yes' if log.success else 'No' }}</td>
+          <td>{{ log.timestamp }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+</body>
+</html>
