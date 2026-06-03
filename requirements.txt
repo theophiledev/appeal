@@ -1,5 +1,5 @@
 Flask==3.0.3
 flask-mysqldb==2.0.0
 mysqlclient==2.2.7
-africastalking==3.4.3
+africastalking==2.0.2
 gunicorn==23.0.0
