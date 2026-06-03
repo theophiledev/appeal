@@ -41,7 +41,7 @@
     </div>
     {% endif %}
 
-    <form method="post" onsubmit="document.getElementById('submit-btn').disabled=true; this.querySelector('button').innerHTML='Signing in...';">
+    <form method="post" onsubmit="var btn=document.getElementById('submit-btn'); btn.disabled=true; btn.innerHTML='Signing in...';">
       <label for="username">Username</label>
       <div class="input-group">
         <input name="username" id="username" autocomplete="username" required autofocus class="{{ 'error-border' if msg else '' }}">
