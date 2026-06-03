@@ -8,28 +8,56 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #1a1a2e, #16213e); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
     .card { background: #fff; padding: 2.5rem; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); width: 100%; max-width: 400px; }
-    .card h1 { text-align: center; margin-bottom: 1.5rem; color: #1a1a2e; font-size: 1.5rem; }
-    .card p { text-align: center; color: #e74c3c; margin-bottom: 1rem; font-size: 0.9rem; }
-    label { display: block; margin-bottom: 0.3rem; color: #555; font-size: 0.9rem; }
-    input { width: 100%; padding: 0.7rem; margin-bottom: 1rem; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem; }
+    .card h1 { text-align: center; margin-bottom: 0.5rem; color: #1a1a2e; font-size: 1.5rem; }
+    .card .subtitle { text-align: center; margin-bottom: 1.5rem; color: #888; font-size: 0.85rem; }
+    .error { background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; animation: shake 0.4s ease-in-out; }
+    .error-icon { font-size: 1.1rem; flex-shrink: 0; }
+    .error-text { font-size: 0.85rem; color: #991b1b; line-height: 1.4; }
+    @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
+    label { display: block; margin-bottom: 0.3rem; color: #555; font-size: 0.9rem; font-weight: 500; }
+    .input-group { position: relative; margin-bottom: 1rem; }
+    input { width: 100%; padding: 0.75rem; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 1rem; transition: border-color 0.2s; }
     input:focus { outline: none; border-color: #1a1a2e; }
-    button { width: 100%; padding: 0.75rem; background: #1a1a2e; color: #fff; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; }
-    button:hover { background: #16213e; }
-    .footer { margin-top: 1rem; text-align: center; font-size: 0.8rem; color: #aaa; }
+    input.error-border { border-color: #fca5a5; }
+    .pw-toggle { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #9ca3af; font-size: 0.85rem; padding: 4px; }
+    .pw-toggle:hover { color: #1a1a2e; }
+    button { width: 100%; padding: 0.75rem; background: #1a1a2e; color: #fff; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; font-weight: 500; transition: background 0.2s, opacity 0.2s; }
+    button:hover:not(:disabled) { background: #16213e; }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+    .footer { margin-top: 1.2rem; text-align: center; font-size: 0.85rem; color: #aaa; }
+    .footer a { color: #1a1a2e; text-decoration: none; font-weight: 500; }
+    .footer a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
   <div class="card">
     <h1>Admin Login</h1>
-    {% if msg %}<p>{{ msg }}</p>{% endif %}
-    <form method="post">
+    <p class="subtitle">ULK Marks Appeal System</p>
+
+    {% if msg %}
+    <div class="error">
+      <span class="error-icon">&#9888;</span>
+      <span class="error-text">{{ msg }}</span>
+    </div>
+    {% endif %}
+
+    <form method="post" onsubmit="document.getElementById('submit-btn').disabled=true; this.querySelector('button').innerHTML='Signing in...';">
       <label for="username">Username</label>
-      <input name="username" id="username" required autofocus>
+      <div class="input-group">
+        <input name="username" id="username" autocomplete="username" required autofocus class="{{ 'error-border' if msg else '' }}">
+      </div>
       <label for="password">Password</label>
-      <input type="password" name="password" id="password" required>
-      <button type="submit">Login</button>
+      <div class="input-group">
+        <input type="password" name="password" id="password" autocomplete="current-password" required class="{{ 'error-border' if msg else '' }}">
+        <button type="button" class="pw-toggle" onclick="togglePw()" tabindex="-1">Show</button>
+      </div>
+      <button type="submit" id="submit-btn">Sign In</button>
     </form>
-    <div class="footer"><a href="{{ url_for('hod_login') }}">HOD Login</a></div>
+    <div class="footer"><a href="{{ url_for('hod_login') }}">HOD Login &rarr;</a></div>
   </div>
+  <script>
+    function togglePw() { var p=document.getElementById('password'); var b=event.target; if(p.type==='password'){p.type='text';b.textContent='Hide'}else{p.type='password';b.textContent='Show'} }
+    document.addEventListener('DOMContentLoaded', function(){ var e=document.querySelector('.error'); if(e){ setTimeout(function(){ e.style.transition='opacity 0.5s'; e.style.opacity='0'; }, 5000); } });
+  </script>
 </body>
 </html>

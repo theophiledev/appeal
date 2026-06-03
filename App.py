@@ -51,9 +51,11 @@ app.config['MYSQL_PORT']     = int(os.environ.get('MYSQL_PORT', 3306))
 
 mysql = MySQL(app)
 
-# ── In-memory OTP store (use Redis in production) ────────────────────────────
-_otp_store: dict = {}   # phone -> { otp, expires }
-
+# ── In-memory stores (use Redis in production) ──────────────────────────────
+_otp_store: dict = {}          # phone -> { otp, expires }
+_login_attempts: dict = {}     # ip -> { count, last_attempt }
+MAX_LOGIN_ATTEMPTS = 5
+LOGIN_LOCKOUT_MINUTES = 15
 MAX_PIN_ATTEMPTS = 3
 
 # =============================================================================
@@ -147,19 +149,50 @@ def admin_login():
         return redirect(url_for('admin_dashboard'))
     msg = ''
     if request.method == 'POST':
-        username = request.form['username']
-        password = sha256(request.form['password'])
-        c = cur()
-        c.execute(
-            "SELECT * FROM admins WHERE username=%s AND password=%s AND role='admin'",
-            (username, password)
-        )
-        admin = c.fetchone()
-        if admin:
-            session.update({'loggedin': True, 'username': admin['username'],
-                            'role': 'admin', 'admin_id': admin['id']})
-            return redirect(url_for('admin_dashboard'))
-        msg = '⚠️ Incorrect username or password.'
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
+
+        if not username or not password:
+            msg = 'Please enter both username and password.'
+        else:
+            ip = request.remote_addr or 'unknown'
+            now = datetime.now()
+            if ip in _login_attempts:
+                rec = _login_attempts[ip]
+                if rec['count'] >= MAX_LOGIN_ATTEMPTS:
+                    if (now - rec['last_attempt']).total_seconds() < LOGIN_LOCKOUT_MINUTES * 60:
+                        remaining = int(LOGIN_LOCKOUT_MINUTES * 60 - (now - rec['last_attempt']).total_seconds())
+                        msg = f'Too many failed attempts. Try again in {remaining} seconds.'
+                    else:
+                        _login_attempts.pop(ip, None)
+                else:
+                    if (now - rec['last_attempt']).total_seconds() > LOGIN_LOCKOUT_MINUTES * 60:
+                        _login_attempts.pop(ip, None)
+            if not msg:
+                c = cur()
+                c.execute(
+                    "SELECT * FROM admins WHERE username=%s AND role='admin'",
+                    (username,)
+                )
+                admin = c.fetchone()
+                if admin:
+                    if sha256(password) == admin['password']:
+                        _login_attempts.pop(ip, None)
+                        session.update({'loggedin': True, 'username': admin['username'],
+                                        'role': 'admin', 'admin_id': admin['id']})
+                        return redirect(url_for('admin_dashboard'))
+                    else:
+                        msg = 'Incorrect password.'
+                else:
+                    msg = 'Account not found.'
+                _login_attempts.setdefault(ip, {'count': 0, 'last_attempt': now})
+                _login_attempts[ip]['count'] += 1
+                _login_attempts[ip]['last_attempt'] = now
+                remaining_attempts = MAX_LOGIN_ATTEMPTS - _login_attempts[ip]['count']
+                if remaining_attempts > 0 and remaining_attempts <= 3:
+                    msg += f' {remaining_attempts} attempt(s) remaining.'
+                elif remaining_attempts <= 0:
+                    msg = f'Account locked due to too many failed attempts. Try again in {LOGIN_LOCKOUT_MINUTES} minutes.'
     return render_template('admin_login.html', msg=msg)
 
 
@@ -272,19 +305,50 @@ def hod_login():
         return redirect(url_for('hod_dashboard'))
     msg = ''
     if request.method == 'POST':
-        username = request.form['username']
-        password = sha256(request.form['password'])
-        c = cur()
-        c.execute(
-            "SELECT * FROM admins WHERE username=%s AND password=%s AND role='hod'",
-            (username, password)
-        )
-        hod = c.fetchone()
-        if hod:
-            session.update({'loggedin': True, 'username': hod['username'],
-                            'role': 'hod', 'hod_id': hod['id']})
-            return redirect(url_for('hod_dashboard'))
-        msg = '⚠️ Incorrect username or password.'
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
+
+        if not username or not password:
+            msg = 'Please enter both username and password.'
+        else:
+            ip = request.remote_addr or 'unknown'
+            now = datetime.now()
+            if ip in _login_attempts:
+                rec = _login_attempts[ip]
+                if rec['count'] >= MAX_LOGIN_ATTEMPTS:
+                    if (now - rec['last_attempt']).total_seconds() < LOGIN_LOCKOUT_MINUTES * 60:
+                        remaining = int(LOGIN_LOCKOUT_MINUTES * 60 - (now - rec['last_attempt']).total_seconds())
+                        msg = f'Too many failed attempts. Try again in {remaining} seconds.'
+                    else:
+                        _login_attempts.pop(ip, None)
+                else:
+                    if (now - rec['last_attempt']).total_seconds() > LOGIN_LOCKOUT_MINUTES * 60:
+                        _login_attempts.pop(ip, None)
+            if not msg:
+                c = cur()
+                c.execute(
+                    "SELECT * FROM admins WHERE username=%s AND role='hod'",
+                    (username,)
+                )
+                hod = c.fetchone()
+                if hod:
+                    if sha256(password) == hod['password']:
+                        _login_attempts.pop(ip, None)
+                        session.update({'loggedin': True, 'username': hod['username'],
+                                        'role': 'hod', 'hod_id': hod['id']})
+                        return redirect(url_for('hod_dashboard'))
+                    else:
+                        msg = 'Incorrect password.'
+                else:
+                    msg = 'Account not found.'
+                _login_attempts.setdefault(ip, {'count': 0, 'last_attempt': now})
+                _login_attempts[ip]['count'] += 1
+                _login_attempts[ip]['last_attempt'] = now
+                remaining_attempts = MAX_LOGIN_ATTEMPTS - _login_attempts[ip]['count']
+                if remaining_attempts > 0 and remaining_attempts <= 3:
+                    msg += f' {remaining_attempts} attempt(s) remaining.'
+                elif remaining_attempts <= 0:
+                    msg = f'Account locked due to too many failed attempts. Try again in {LOGIN_LOCKOUT_MINUTES} minutes.'
     return render_template('hod_login.html', msg=msg)
 
 
