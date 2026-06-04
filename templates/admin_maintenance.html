@@ -1,125 +1,129 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>System Maintenance | ULK Appeal System</title>
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;color:#333}
-    nav{background:#1a1a2e;color:#fff;padding:0 2rem;display:flex;justify-content:space-between;align-items:center;height:60px;position:sticky;top:0;z-index:100}
-    nav h2{font-size:1.15rem;display:flex;align-items:center;gap:8px}
-    nav h2 span{background:#e94560;font-size:0.65rem;padding:2px 8px;border-radius:10px;font-weight:400}
-    nav .nav-links{display:flex;align-items:center;gap:0.5rem}
-    nav .nav-links a{color:#ddd;text-decoration:none;font-size:0.85rem;padding:0.5rem 0.8rem;border-radius:6px;transition:all 0.2s}
-    nav .nav-links a:hover{background:rgba(255,255,255,0.1);color:#fff}
-    nav .nav-links .logout{background:#e94560;color:#fff;padding:0.4rem 1rem}
-    nav .nav-links .logout:hover{background:#c73e54}
-    .container{max-width:1100px;margin:1.5rem auto;padding:0 1.5rem}
-    .flash{padding:0.75rem 1rem;margin-bottom:1rem;border-radius:8px;font-size:0.85rem;display:flex;align-items:center;gap:8px;animation:slideIn 0.3s}
-    @keyframes slideIn{from{transform:translateY(-10px);opacity:0}to{transform:translateY(0);opacity:1}}
-    .flash.success{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
-    .card{background:#fff;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06);overflow:hidden}
-    .card-header{display:flex;justify-content:space-between;align-items:center;padding:1rem 1.25rem;border-bottom:1px solid #eee}
-    .card-header h3{font-size:0.95rem;color:#1a1a2e;display:flex;align-items:center;gap:6px}
-    .card-header .badge{background:#eee;padding:2px 10px;border-radius:12px;font-size:0.75rem;color:#666}
-    .search-box{padding:0.75rem 1.25rem;border-bottom:1px solid #eee}
-    .search-box input{width:100%;padding:0.5rem 0.75rem;border:1.5px solid #e0e0e0;border-radius:6px;font-size:0.85rem}
-    .search-box input:focus{outline:none;border-color:#1a1a2e}
-    .card-body{padding:0}
-    table{width:100%;border-collapse:collapse;font-size:0.85rem}
-    th{background:#f8f9fa;color:#555;font-weight:600;padding:0.7rem 1rem;text-align:left;border-bottom:2px solid #eee;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.5px}
-    td{padding:0.7rem 1rem;border-bottom:1px solid #f0f0f0;vertical-align:middle}
-    tr:last-child td{border-bottom:none}
-    tr:hover td{background:#f8f9fa}
-    .status{display:flex;align-items:center;gap:6px;font-weight:600;font-size:0.85rem}
-    .status-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
-    .dot-locked{background:#e74c3c}
-    .dot-active{background:#27ae60}
-    .text-locked{color:#e74c3c}
-    .text-active{color:#27ae60}
-    .btn{display:inline-flex;align-items:center;gap:4px;padding:0.4rem 0.8rem;border:none;border-radius:5px;font-size:0.75rem;cursor:pointer;text-decoration:none;transition:all 0.15s;font-weight:500}
-    .btn-success{background:#27ae60;color:#fff}
-    .btn-success:hover{background:#219a52}
-    .btn-sm{padding:0.3rem 0.65rem;font-size:0.72rem}
-    .empty{text-align:center;padding:2rem;color:#aaa;font-size:0.85rem}
-    .inline-form{display:inline}
-    .attempts-bar{background:#f0f0f0;border-radius:10px;height:6px;width:80px;display:inline-block;overflow:hidden;vertical-align:middle;margin-right:6px}
-    .attempts-fill{height:100%;border-radius:10px;transition:width 0.3s}
-    .attempts-fill.low{background:#27ae60}
-    .attempts-fill.medium{background:#e67e22}
-    .attempts-fill.high{background:#e74c3c}
-  </style>
-</head>
-<body>
-  <nav>
-    <h2>Maintenance <span>ULK Appeal</span></h2>
-    <div class="nav-links">
-      <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
-      <a class="logout" href="{{ url_for('logout') }}">Logout {{ session.username }}</a>
+{% extends "base.html" %}
+
+{% block title %}System Maintenance — ULK{% endblock %}
+
+{% block content %}
+<div class="min-h-screen">
+  <!-- Navbar -->
+  <nav class="bg-gray-900/80 backdrop-blur-lg border-b border-cyan-500/20 px-6 py-4 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div
+          class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-cyan-600 flex items-center justify-center shadow-lg shadow-cyan-500/30">
+          <i data-lucide="settings" class="w-5 h-5 text-white"></i>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold text-white">System Maintenance</h1>
+          <p class="text-xs text-cyan-400 font-medium">Admin Portal</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="/admin/dashboard"
+          class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors">
+          <i data-lucide="arrow-left" class="w-4 h-4"></i>
+          Back to Dashboard
+        </a>
+        <a href="/logout"
+          class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors">
+          <i data-lucide="log-out" class="w-4 h-4"></i>
+          Logout
+        </a>
+      </div>
     </div>
   </nav>
 
-  <div class="container">
+  <div class="max-w-7xl mx-auto px-6 py-8">
+    <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, msg in messages %}
-          <div class="flash {{ category }}">&#9432; {{ msg }}</div>
-        {% endfor %}
+    {% for cat, msg in messages %}
+    <div class="flash-message flash-{{ cat }} mb-6 flex items-center gap-3">
+      {% if cat == 'success' %}
+      <i data-lucide="check-circle" class="w-5 h-5 flex-shrink-0"></i>
+      {% else %}
+      <i data-lucide="alert-circle" class="w-5 h-5 flex-shrink-0"></i>
       {% endif %}
+      <span>{{ msg }}</span>
+    </div>
+    {% endfor %}
     {% endwith %}
 
-    <div class="card">
-      <div class="card-header"><h3>PIN Credentials</h3><span class="badge">{{ pin_status|length }} students</span></div>
-      <div class="search-box"><input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Search by student ID, name, or phone..."></div>
-      <div class="card-body">
-        {% if pin_status %}
-        <table id="pinTable">
-          <tr><th>Student ID</th><th>Name</th><th>Phone</th><th>Attempts</th><th>Status</th><th>Action</th></tr>
-          {% for p in pin_status %}
-          {% set max_attempts = 3 %}
-          {% set pct = (p.failed_attempts / max_attempts * 100) | round %}
-          {% set bar_class = 'low' if p.failed_attempts == 0 else ('medium' if p.failed_attempts < max_attempts else 'high') %}
-          <tr>
-            <td><strong>{{ p.student_id }}</strong></td>
-            <td>{{ p.name[:30] }}</td>
-            <td>{{ p.phone }}</td>
-            <td>
-              <div class="attempts-bar"><div class="attempts-fill {{ bar_class }}" style="width:{{ pct if pct <= 100 else 100 }}%"></div></div>
-              {{ p.failed_attempts }}/{{ max_attempts }}
-            </td>
-            <td>
-              <span class="status">
-                <span class="status-dot {{ 'dot-locked' if p.locked else 'dot-active' }}"></span>
-                <span class="{{ 'text-locked' if p.locked else 'text-active' }}">{{ 'Locked' if p.locked else 'Active' }}</span>
-              </span>
-            </td>
-            <td>
-              {% if p.locked %}
-              <form class="inline-form" method="post" action="{{ url_for('admin_unlock', student_id=p.student_id) }}">
-                <button class="btn btn-success btn-sm">Unlock</button>
-              </form>
-              {% else %}
-              <span class="text-muted">-</span>
-              {% endif %}
-            </td>
-          </tr>
-          {% endfor %}
+    <!-- PIN Status Table -->
+    <div>
+      <h2 class="text-lg font-semibold text-cyan-400 flex items-center gap-2 mb-6">
+        <i data-lucide="shield-alert" class="w-5 h-5"></i>
+        Student PIN Status & Account Lockouts
+      </h2>
+      <div class="table-container">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>Student ID</th>
+              <th>Name</th>
+              <th>Phone</th>
+              <th>Failed Attempts</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in pin_status %}
+            <tr>
+              <td class="text-gray-400">{{ s.student_id }}</td>
+              <td class="font-medium text-white">{{ s.name }}</td>
+              <td class="text-gray-400">{{ s.phone }}</td>
+              <td>
+                {% set progress = (s.failed_attempts / 3) * 100 %}
+                <div class="flex items-center gap-2">
+                  <div class="w-24 h-2 bg-gray-700 rounded-full overflow-hidden">
+                    <div
+                      class="h-full rounded-full {% if s.failed_attempts >= 2 %}bg-red-500{% elif s.failed_attempts == 1 %}bg-amber-500{% else %}bg-green-500{% endif %}"
+                      style="width: {{ progress }}%"></div>
+                  </div>
+                  <span
+                    class="text-sm {% if s.failed_attempts >= 2 %}text-red-400{% elif s.failed_attempts == 1 %}text-amber-400{% else %}text-green-400{% endif %}">
+                    {{ s.failed_attempts }}/3
+                  </span>
+                </div>
+              </td>
+              <td>
+                {% if s.locked %}
+                <span class="badge badge-red flex items-center gap-1">
+                  <i data-lucide="lock" class="w-3 h-3"></i>
+                  LOCKED
+                </span>
+                {% else %}
+                <span class="badge badge-green flex items-center gap-1">
+                  <i data-lucide="unlock" class="w-3 h-3"></i>
+                  Active
+                </span>
+                {% endif %}
+              </td>
+              <td>
+                {% if s.locked %}
+                <form method="POST" action="/admin/unlock/{{ s.student_id }}" class="inline">
+                  <button type="submit"
+                    class="px-3 py-1.5 bg-cyan-500 hover:bg-cyan-600 text-gray-900 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1">
+                    <i data-lucide="unlock" class="w-3 h-3"></i>
+                    Unlock Account
+                  </button>
+                </form>
+                {% else %}
+                <span class="text-xs text-gray-500">No action needed</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="6" class="text-center text-gray-500 py-12">
+                <i data-lucide="shield-check" class="w-12 h-12 mx-auto mb-3 text-gray-600"></i>
+                <p>No PIN records found.</p>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
         </table>
-        {% else %}<div class="empty">No student PIN records found.</div>{% endif %}
       </div>
     </div>
   </div>
-
-  <script>
-    function filterTable(){
-      var input=document.getElementById('searchInput');
-      var filter=input.value.toLowerCase();
-      var rows=document.querySelectorAll('#pinTable tr:not(:first-child)');
-      rows.forEach(function(row){
-        row.style.display=row.textContent.toLowerCase().includes(filter)?'':'none';
-      });
-    }
-  </script>
-</body>
-</html>
+</div>
+{% endblock %}

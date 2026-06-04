@@ -1,174 +1,234 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Dashboard | ULK Appeal System</title>
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;color:#333}
-    nav{background:#1a1a2e;color:#fff;padding:0 2rem;display:flex;justify-content:space-between;align-items:center;height:60px;position:sticky;top:0;z-index:100}
-    nav h2{font-size:1.15rem;display:flex;align-items:center;gap:8px}
-    nav h2 span{background:#e94560;font-size:0.65rem;padding:2px 8px;border-radius:10px;font-weight:400}
-    nav .nav-links{display:flex;align-items:center;gap:0.5rem}
-    nav .nav-links a{color:#ddd;text-decoration:none;font-size:0.85rem;padding:0.5rem 0.8rem;border-radius:6px;transition:all 0.2s}
-    nav .nav-links a:hover{background:rgba(255,255,255,0.1);color:#fff}
-    nav .nav-links .logout{background:#e94560;color:#fff;padding:0.4rem 1rem}
-    nav .nav-links .logout:hover{background:#c73e54}
-    .container{max-width:1300px;margin:1.5rem auto;padding:0 1.5rem}
-    .flash{padding:0.75rem 1rem;margin-bottom:1rem;border-radius:8px;font-size:0.85rem;display:flex;align-items:center;gap:8px;animation:slideIn 0.3s}
-    @keyframes slideIn{from{transform:translateY(-10px);opacity:0}to{transform:translateY(0);opacity:1}}
-    .flash.success{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
-    .flash.warning{background:#fff3cd;color:#856404;border:1px solid #ffeeba}
-    .flash.danger{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb}
-    .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:1.5rem}
-    .stat-card{background:#fff;padding:1.2rem;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06);text-align:center;border-top:3px solid #1a1a2e;transition:transform 0.2s,box-shadow 0.2s}
-    .stat-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.1)}
-    .stat-card .num{font-size:2rem;font-weight:700;color:#1a1a2e}
-    .stat-card .lbl{color:#888;font-size:0.8rem;margin-top:2px}
-    .stat-card.orange{border-top-color:#e67e22}
-    .stat-card.green{border-top-color:#27ae60}
-    .stat-card.red{border-top-color:#e74c3c}
-    .stat-card.blue{border-top-color:#3498db}
-    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem}
-    @media(max-width:900px){.grid-2{grid-template-columns:1fr}}
-    .card{background:#fff;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06);overflow:hidden}
-    .card-header{display:flex;justify-content:space-between;align-items:center;padding:1rem 1.25rem;border-bottom:1px solid #eee}
-    .card-header h3{font-size:0.95rem;color:#1a1a2e;display:flex;align-items:center;gap:6px}
-    .card-header .badge{background:#eee;padding:2px 10px;border-radius:12px;font-size:0.75rem;color:#666}
-    .card-body{padding:0}
-    table{width:100%;border-collapse:collapse;font-size:0.85rem}
-    th{background:#f8f9fa;color:#555;font-weight:600;padding:0.7rem 1rem;text-align:left;border-bottom:2px solid #eee;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.5px}
-    td{padding:0.7rem 1rem;border-bottom:1px solid #f0f0f0}
-    tr:last-child td{border-bottom:none}
-    tr:hover td{background:#f8f9fa}
-    .btn{display:inline-flex;align-items:center;gap:4px;padding:0.45rem 1rem;border:none;border-radius:6px;font-size:0.8rem;cursor:pointer;text-decoration:none;transition:all 0.2s;font-weight:500}
-    .btn-primary{background:#1a1a2e;color:#fff}
-    .btn-primary:hover{background:#2d2d4a}
-    .btn-danger{background:#e74c3c;color:#fff}
-    .btn-danger:hover{background:#c0392b}
-    .btn-sm{padding:0.3rem 0.65rem;font-size:0.75rem}
-    .inline-form{display:inline}
-    .badge-status{display:inline-block;padding:2px 10px;border-radius:12px;font-size:0.72rem;font-weight:600}
-    .badge-pending{background:#fff3cd;color:#856404}
-    .badge-approved{background:#d4edda;color:#155724}
-    .badge-rejected{background:#f8d7da;color:#721c24}
-    .yesno{font-weight:600}
-    .yesno.yes{color:#27ae60}
-    .yesno.no{color:#e74c3c}
-    .role-badge{display:inline-block;padding:1px 8px;border-radius:10px;font-size:0.7rem;font-weight:600;text-transform:uppercase}
-    .role-admin{background:#1a1a2e;color:#fff}
-    .role-hod{background:#3498db;color:#fff}
-    .truncate{max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .empty{text-align:center;padding:2rem;color:#aaa;font-size:0.85rem}
-    .create-form{display:flex;gap:0.5rem;flex-wrap:wrap;padding:1rem 1.25rem}
-    .create-form input,.create-form select{padding:0.5rem 0.75rem;border:1.5px solid #e0e0e0;border-radius:6px;font-size:0.85rem;flex:1;min-width:140px}
-    .create-form input:focus,.create-form select:focus{outline:none;border-color:#1a1a2e}
-    .text-muted{color:#999;font-size:0.8rem}
-  </style>
-</head>
-<body>
-  <nav>
-    <h2>Admin <span>ULK Appeal</span></h2>
-    <div class="nav-links">
-      <a href="{{ url_for('admin_system_maintenance') }}">Maintenance</a>
-      <a href="{{ url_for('ussd_simulator') }}">USSD Simulator</a>
-      <a class="logout" href="{{ url_for('logout') }}">Logout {{ session.username }}</a>
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard — ULK Marks Appeal System{% endblock %}
+
+{% block content %}
+<div class="min-h-screen">
+  <!-- Navbar -->
+  <nav class="bg-gray-900/80 backdrop-blur-lg border-b border-cyan-500/20 px-6 py-4 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div
+          class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-cyan-600 flex items-center justify-center shadow-lg shadow-cyan-500/30">
+          <i data-lucide="shield-check" class="w-5 h-5 text-white"></i>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold text-white">ULK Marks Appeal</h1>
+          <p class="text-xs text-cyan-400 font-medium">Admin Portal</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2 text-sm text-gray-400">
+          <i data-lucide="user-circle" class="w-4 h-4"></i>
+          <span class="text-white font-medium">{{ session.username }}</span>
+        </div>
+        <a href="/admin/system_maintenance"
+          class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors">
+          <i data-lucide="settings" class="w-4 h-4"></i>
+          System Maintenance
+        </a>
+        <a href="/logout"
+          class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors">
+          <i data-lucide="log-out" class="w-4 h-4"></i>
+          Logout
+        </a>
+      </div>
     </div>
   </nav>
 
-  <div class="container">
+  <div class="max-w-7xl mx-auto px-6 py-8">
+    <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, msg in messages %}
-          <div class="flash {{ category }}">&#9432; {{ msg }}</div>
-        {% endfor %}
+    {% for cat, msg in messages %}
+    <div class="flash-message flash-{{ cat }} mb-6 flex items-center gap-3">
+      {% if cat == 'success' %}
+      <i data-lucide="check-circle" class="w-5 h-5 flex-shrink-0"></i>
+      {% else %}
+      <i data-lucide="alert-circle" class="w-5 h-5 flex-shrink-0"></i>
       {% endif %}
+      <span>{{ msg }}</span>
+    </div>
+    {% endfor %}
     {% endwith %}
 
-    <div class="stats">
-      <div class="stat-card"><div class="num">{{ total_students }}</div><div class="lbl">Total Students</div></div>
-      <div class="stat-card orange"><div class="num">{{ total_appeals }}</div><div class="lbl">Total Appeals</div></div>
-      {% if status_counts.get('Pending') %}<div class="stat-card blue"><div class="num">{{ status_counts['Pending'] }}</div><div class="lbl">Pending</div></div>{% endif %}
-      {% if status_counts.get('Approved') %}<div class="stat-card green"><div class="num">{{ status_counts['Approved'] }}</div><div class="lbl">Approved</div></div>{% endif %}
-      {% if status_counts.get('Rejected') %}<div class="stat-card red"><div class="num">{{ status_counts['Rejected'] }}</div><div class="lbl">Rejected</div></div>{% endif %}
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div class="stat-card">
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center">
+            <i data-lucide="users" class="w-6 h-6 text-cyan-400"></i>
+          </div>
+          <span class="text-xs text-gray-500 uppercase tracking-wider">Total</span>
+        </div>
+        <div class="text-3xl font-bold text-cyan-400">{{ total_students }}</div>
+        <div class="text-sm text-gray-400 mt-1">Students Registered</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center">
+            <i data-lucide="file-text" class="w-6 h-6 text-amber-400"></i>
+          </div>
+          <span class="text-xs text-gray-500 uppercase tracking-wider">Total</span>
+        </div>
+        <div class="text-3xl font-bold text-amber-400">{{ total_appeals }}</div>
+        <div class="text-sm text-gray-400 mt-1">Appeals Submitted</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center">
+            <i data-lucide="check-circle-2" class="w-6 h-6 text-green-400"></i>
+          </div>
+          <span class="text-xs text-gray-500 uppercase tracking-wider">Approved</span>
+        </div>
+        <div class="text-3xl font-bold text-green-400">{{ status_counts.get('Approved', 0) }}</div>
+        <div class="text-sm text-gray-400 mt-1">Successful Appeals</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center">
+            <i data-lucide="clock" class="w-6 h-6 text-red-400"></i>
+          </div>
+          <span class="text-xs text-gray-500 uppercase tracking-wider">Pending</span>
+        </div>
+        <div class="text-3xl font-bold text-red-400">{{ status_counts.get('Pending', 0) }}</div>
+        <div class="text-sm text-gray-400 mt-1">Awaiting Review</div>
+      </div>
     </div>
 
-    <div class="card" style="margin-bottom:1.5rem">
-      <div class="card-header"><h3>&#43; Create Account</h3></div>
-      <form class="create-form" method="post" action="{{ url_for('admin_manage_accounts') }}">
-        <input name="username" placeholder="Username" required>
-        <input type="password" name="password" placeholder="Password" required>
-        <select name="role"><option value="admin">Admin</option><option value="hod">HOD</option></select>
-        <button class="btn btn-primary" name="action" value="create">Create</button>
-      </form>
-    </div>
+    <!-- Manage Accounts Section -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-lg font-semibold text-cyan-400 flex items-center gap-2">
+          <i data-lucide="user-cog" class="w-5 h-5"></i>
+          Manage Accounts
+        </h2>
+      </div>
 
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-header"><h3>Accounts</h3><span class="badge">{{ accounts|length }}</span></div>
-        <div class="card-body">
-          {% if accounts %}
-          <table>
-            <tr><th>ID</th><th>Username</th><th>Role</th><th>Action</th></tr>
-            {% for a in accounts %}
+      <!-- Create Account Form -->
+      <div class="glass-card rounded-xl p-6 mb-6">
+        <h3 class="text-sm font-semibold text-gray-300 mb-4 flex items-center gap-2">
+          <i data-lucide="user-plus" class="w-4 h-4"></i>
+          Create New Account
+        </h3>
+        <form method="POST" action="/admin/manage_accounts" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+          <input type="hidden" name="action" value="create">
+          <div>
+            <label class="block text-xs text-gray-400 mb-2">Username</label>
+            <input type="text" name="username" class="input-field" placeholder="Enter username" required>
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-2">Password</label>
+            <input type="password" name="password" class="input-field" placeholder="Enter password" required>
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-2">Role</label>
+            <select name="role" class="input-field">
+              <option value="hod">HOD</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <button type="submit" class="btn-primary flex items-center justify-center gap-2">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            Create Account
+          </button>
+        </form>
+      </div>
+
+      <!-- Accounts Table -->
+      <div class="table-container">
+        <table class="custom-table">
+          <thead>
             <tr>
-              <td style="color:#999;font-size:0.8rem">{{ a.id }}</td>
-              <td><strong>{{ a.username }}</strong><br><span class="text-muted">{{ a.created_at[:10] }}</span></td>
-              <td><span class="role-badge role-{{ a.role }}">{{ a.role }}</span></td>
+              <th>ID</th>
+              <th>Username</th>
+              <th>Role</th>
+              <th>Created</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for acc in accounts %}
+            <tr>
+              <td class="text-gray-400">{{ acc.id }}</td>
+              <td class="font-medium text-white">{{ acc.username }}</td>
               <td>
-                {% if a.id != session.admin_id %}
-                <form class="inline-form" method="post" action="{{ url_for('admin_manage_accounts') }}" onsubmit="return confirm('Delete {{ a.username }}?')">
-                  <input type="hidden" name="account_id" value="{{ a.id }}">
-                  <button class="btn btn-danger btn-sm" name="action" value="delete">Delete</button>
+                {% if acc.role == 'admin' %}
+                <span class="badge badge-teal">ADMIN</span>
+                {% else %}
+                <span class="badge badge-amber">HOD</span>
+                {% endif %}
+              </td>
+              <td class="text-gray-400 text-sm">{{ acc.created_at }}</td>
+              <td>
+                {% if acc.username != session.username %}
+                <form method="POST" action="/admin/manage_accounts" class="inline">
+                  <input type="hidden" name="action" value="delete">
+                  <input type="hidden" name="account_id" value="{{ acc.id }}">
+                  <button type="submit" class="btn-danger text-xs px-3 py-1.5"
+                    onclick="return confirm('Remove account {{ acc.username }}?')">
+                    <i data-lucide="trash-2" class="w-3 h-3 inline mr-1"></i>
+                    Remove
+                  </button>
                 </form>
+                {% else %}
+                <span class="text-xs text-gray-500">Current session</span>
                 {% endif %}
               </td>
             </tr>
             {% endfor %}
-          </table>
-          {% else %}<div class="empty">No accounts found.</div>{% endif %}
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header"><h3>Recent Appeals</h3><span class="badge">{{ recent_appeals|length }}</span></div>
-        <div class="card-body">
-          {% if recent_appeals %}
-          <table>
-            <tr><th>Student</th><th>Module</th><th>Status</th></tr>
-            {% for a in recent_appeals %}
-            <tr>
-              <td>{{ a.student_id }}<br><span class="text-muted">{{ a.name[:20] }}</span></td>
-              <td class="truncate">{{ a.module_name }}</td>
-              <td><span class="badge-status badge-{{ a.status_name.lower() }}">{{ a.status_name }}</span></td>
-            </tr>
-            {% endfor %}
-          </table>
-          {% else %}<div class="empty">No appeals yet.</div>{% endif %}
-        </div>
+          </tbody>
+        </table>
       </div>
     </div>
 
-    <div class="card">
-      <div class="card-header"><h3>Audit Log</h3><span class="badge">Last 20</span></div>
-      <div class="card-body">
-        {% if audit_log %}
-        <table>
-          <tr><th>Student</th><th>Phone</th><th>Action</th><th>Status</th><th>Time</th></tr>
-          {% for log in audit_log %}
-          <tr>
-            <td>{{ log.student_id or '-' }}</td>
-            <td>{{ log.phone or '-' }}</td>
-            <td><code>{{ log.action }}</code></td>
-            <td><span class="yesno {{ 'yes' if log.success else 'no' }}">{{ 'Success' if log.success else 'Failed' }}</span></td>
-            <td class="text-muted">{{ log.timestamp }}</td>
-          </tr>
-          {% endfor %}
+    <!-- Audit Log Section -->
+    <div>
+      <h2 class="text-lg font-semibold text-cyan-400 flex items-center gap-2 mb-6">
+        <i data-lucide="history" class="w-5 h-5"></i>
+        Recent Access Audit Log
+      </h2>
+      <div class="table-container">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>Student ID</th>
+              <th>Phone</th>
+              <th>Action</th>
+              <th>Result</th>
+              <th>Timestamp</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in audit_log %}
+            <tr>
+              <td class="text-gray-400">{{ log.student_id }}</td>
+              <td class="text-gray-400">{{ log.phone }}</td>
+              <td>
+                <code class="text-cyan-400 text-xs bg-cyan-500/10 px-2 py-1 rounded">{{ log.action }}</code>
+              </td>
+              <td>
+                {% if log.success %}
+                <span class="flex items-center gap-2 text-green-400 text-sm">
+                  <span class="w-2 h-2 rounded-full bg-green-400"></span>
+                  Success
+                </span>
+                {% else %}
+                <span class="flex items-center gap-2 text-red-400 text-sm">
+                  <span class="w-2 h-2 rounded-full bg-red-400"></span>
+                  Failed
+                </span>
+                {% endif %}
+              </td>
+              <td class="text-gray-400 text-sm">{{ log.timestamp }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
         </table>
-        {% else %}<div class="empty">No audit records yet.</div>{% endif %}
       </div>
     </div>
   </div>
-</body>
-</html>
+</div>
+{% endblock %}
