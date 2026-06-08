@@ -110,12 +110,28 @@
               <td class="font-medium text-white">{{ r.name }}</td>
               <td class="text-gray-300">{{ r.module_name }}</td>
               <td>
-                {% if r.mark >= 50 %}
-                <span class="badge badge-green">{{ r.mark }}</span>
-                {% elif r.mark >= 40 %}
-                <span class="badge badge-amber">{{ r.mark }}</span>
+                {% set mark_num = r.mark|int(-1) %}
+                {% if mark_num >= 0 %}
+                  {% if mark_num >= 50 %}
+                  <span class="badge badge-green">{{ r.mark }}</span>
+                  {% elif mark_num >= 40 %}
+                  <span class="badge badge-amber">{{ r.mark }}</span>
+                  {% else %}
+                  <span class="badge badge-red">{{ r.mark }}</span>
+                  {% endif %}
                 {% else %}
-                <span class="badge badge-red">{{ r.mark }}</span>
+                  {% set first = r.mark|upper|first %}
+                  {% if first == 'A' %}
+                  <span class="badge badge-green">{{ r.mark }}</span>
+                  {% elif first == 'B' %}
+                  <span class="badge badge-teal">{{ r.mark }}</span>
+                  {% elif first == 'C' %}
+                  <span class="badge badge-amber">{{ r.mark }}</span>
+                  {% elif first == 'D' %}
+                  <span class="badge badge-orange" style="background:rgba(244,162,97,0.15);color:#f4a261;border:1px solid rgba(244,162,97,0.3)">{{ r.mark }}</span>
+                  {% else %}
+                  <span class="badge badge-red">{{ r.mark }}</span>
+                  {% endif %}
                 {% endif %}
               </td>
               <td class="text-gray-400 text-sm">{{ r.updated_by or '—' }}</td>
@@ -125,7 +141,7 @@
                   <input type="hidden" name="action" value="update">
                   <input type="hidden" name="student_id" value="{{ r.student_id }}">
                   <input type="hidden" name="module_name" value="{{ r.module_name }}">
-                  <input type="number" name="mark" value="{{ r.mark }}" min="0" max="100"
+                  <input type="text" name="mark" value="{{ r.mark }}"
                     class="input-field text-xs py-1.5 px-2 w-20 text-center">
                   <button type="submit"
                     class="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-gray-900 text-xs font-semibold rounded-lg transition-colors">

@@ -1,0 +1,864 @@
+{% extends "base.html" %}
+
+{% block title %}USSD Simulator — Student Portal{% endblock %}
+
+{% block content %}
+<style>
+  .phone-frame {
+    width: 360px;
+    background: #111;
+    border-radius: 48px;
+    padding: 16px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.6), 0 0 0 2px #333, inset 0 0 0 1px rgba(255,255,255,0.05);
+    position: relative;
+  }
+
+  .phone-screen {
+    background: #0a0a0a;
+    border-radius: 36px;
+    overflow: hidden;
+    position: relative;
+    min-height: 600px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 24px 8px;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    position: relative;
+    z-index: 5;
+  }
+
+  .status-bar .carrier {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .status-bar .carrier .dots {
+    display: flex;
+    gap: 2px;
+  }
+
+  .status-bar .carrier .dot {
+    width: 3px;
+    height: 10px;
+    border-radius: 1.5px;
+    background: #555;
+  }
+
+  .status-bar .carrier .dot.active {
+    background: #fff;
+  }
+
+  .status-bar .time {
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .status-bar .icons {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .notch {
+    width: 140px;
+    height: 30px;
+    background: #000;
+    border-radius: 0 0 18px 18px;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+  }
+
+  .notch::before {
+    content: '';
+    width: 10px;
+    height: 10px;
+    background: #1a1a2e;
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  /* ── Dialer ── */
+  .dialer-screen {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 24px 30px;
+  }
+
+  .dialer-header {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .dialer-header .brand {
+    font-size: 18px;
+    font-weight: 800;
+    color: #FFC300;
+    letter-spacing: 1px;
+  }
+
+  .dialer-header .brand span {
+    color: #fff;
+    font-weight: 400;
+  }
+
+  .dialer-header .sub {
+    font-size: 11px;
+    color: #888;
+    margin-top: 4px;
+  }
+
+  .dialer-input-wrap {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 14px 20px;
+    width: 100%;
+    max-width: 260px;
+    margin-bottom: 24px;
+    text-align: center;
+  }
+
+  .dialer-input-wrap .code {
+    font-size: 28px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 2px;
+  }
+
+  .dialer-input-wrap .code .hash {
+    color: #FFC300;
+  }
+
+  .dialer-input-wrap .hint {
+    font-size: 10px;
+    color: #666;
+    margin-top: 4px;
+  }
+
+  .keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    width: 100%;
+    max-width: 240px;
+    margin-bottom: 20px;
+  }
+
+  .keypad .key {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: none;
+    background: #1a1a1a;
+    color: #fff;
+    font-size: 22px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    margin: 0 auto;
+  }
+
+  .keypad .key .sub {
+    font-size: 8px;
+    font-weight: 400;
+    color: #666;
+    letter-spacing: 0.5px;
+  }
+
+  .keypad .key:active {
+    background: #333;
+    transform: scale(0.92);
+  }
+
+  .keypad .key.empty {
+    background: transparent;
+    cursor: default;
+  }
+
+  .keypad .key.star {
+    font-size: 28px;
+  }
+
+  .call-btn {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    border: none;
+    background: #FFC300;
+    color: #000;
+    font-size: 26px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    box-shadow: 0 4px 16px rgba(255, 195, 0, 0.3);
+  }
+
+  .call-btn:active {
+    transform: scale(0.9);
+    box-shadow: 0 2px 8px rgba(255, 195, 0, 0.2);
+  }
+
+  .call-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* ── USSD Session ── */
+  .ussd-screen {
+    flex: 1;
+    display: none;
+    flex-direction: column;
+    padding: 8px 16px 12px;
+    position: relative;
+  }
+
+  .ussd-screen.active {
+    display: flex;
+  }
+
+  .ussd-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 6px 12px;
+    border-bottom: 1px solid #222;
+    margin-bottom: 8px;
+  }
+
+  .ussd-header .service-code {
+    font-size: 12px;
+    color: #888;
+    font-weight: 600;
+  }
+
+  .ussd-header .service-code strong {
+    color: #FFC300;
+  }
+
+  .ussd-header .end-btn {
+    background: none;
+    border: 1px solid #ef476f;
+    color: #ef476f;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .ussd-header .end-btn:hover {
+    background: #ef476f;
+    color: #fff;
+  }
+
+  .ussd-messages {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 360px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 4px 2px;
+    scroll-behavior: smooth;
+  }
+
+  .ussd-messages::-webkit-scrollbar {
+    width: 3px;
+  }
+
+  .ussd-messages::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .ussd-messages::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 2px;
+  }
+
+  .ussd-msg {
+    max-width: 92%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 13px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+    animation: msgIn 0.25s ease;
+  }
+
+  @keyframes msgIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .ussd-msg.system {
+    background: #111;
+    color: #e0e0e0;
+    align-self: flex-start;
+    border: 1px solid #222;
+    border-left: 3px solid #FFC300;
+  }
+
+  .ussd-msg.user {
+    background: #1a3a1a;
+    color: #b8f0b8;
+    align-self: flex-end;
+    font-weight: 600;
+    border: 1px solid #2a5a2a;
+  }
+
+  .ussd-input-area {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #222;
+  }
+
+  .ussd-input-area input {
+    flex: 1;
+    padding: 10px 14px;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 20px;
+    color: #fff;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .ussd-input-area input:focus {
+    border-color: #FFC300;
+  }
+
+  .ussd-input-area input::placeholder {
+    color: #555;
+  }
+
+  .ussd-input-area .send-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: #FFC300;
+    color: #000;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+
+  .ussd-input-area .send-btn:active {
+    transform: scale(0.9);
+  }
+
+  .ussd-input-area .send-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .quick-btns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+    justify-content: center;
+  }
+
+  .quick-btns button {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid #333;
+    background: #1a1a1a;
+    color: #ccc;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .quick-btns button:active {
+    background: #333;
+    border-color: #FFC300;
+    color: #FFC300;
+  }
+
+  .quick-btns button.back-q {
+    border-color: #555;
+    color: #888;
+    font-size: 10px;
+    width: auto;
+    padding: 0 12px;
+    border-radius: 18px;
+  }
+
+  .quick-btns button.back-q:active {
+    border-color: #ef476f;
+    color: #ef476f;
+  }
+
+  /* ── Phone selector ── */
+  .phone-selector {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    align-items: center;
+  }
+
+  .phone-selector label {
+    font-size: 12px;
+    color: #888;
+    font-weight: 500;
+  }
+
+  .phone-selector select {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .phone-selector select:focus {
+    border-color: #FFC300;
+  }
+
+  .connecting-dots::after {
+    content: '';
+    animation: dots 1.5s steps(4, end) infinite;
+  }
+
+  @keyframes dots {
+    0%   { content: ''; }
+    25%  { content: '.'; }
+    50%  { content: '..'; }
+    75%  { content: '...'; }
+    100% { content: ''; }
+  }
+
+  /* ── Landing info ── */
+  .info-panel {
+    max-width: 360px;
+  }
+
+  .info-panel h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #FFC300;
+    margin-bottom: 8px;
+  }
+
+  .info-panel p {
+    font-size: 13px;
+    color: #999;
+    line-height: 1.6;
+  }
+
+  .info-panel .steps {
+    margin-top: 12px;
+    font-size: 12px;
+    color: #777;
+  }
+
+  .info-panel .steps li {
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .info-panel .steps li::before {
+    content: '→';
+    color: #FFC300;
+    font-weight: 700;
+  }
+
+  .typing-indicator {
+    display: inline-flex;
+    gap: 3px;
+    padding: 4px 0;
+  }
+
+  .typing-indicator span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #FFC300;
+    animation: typing 1.2s infinite;
+  }
+
+  .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+  .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes typing {
+    0%, 60%, 100% { opacity: 0.2; transform: translateY(0); }
+    30%           { opacity: 1; transform: translateY(-4px); }
+  }
+</style>
+
+<div class="min-h-screen flex flex-col lg:flex-row items-center justify-center gap-10 p-6 bg-gradient-to-br from-gray-900 via-gray-950 to-black">
+  <!-- Phone -->
+  <div class="phone-frame" id="phoneFrame">
+    <div class="phone-screen">
+      <div class="status-bar">
+        <div class="carrier">
+          <div class="dots">
+            <span class="dot active"></span>
+            <span class="dot active"></span>
+            <span class="dot active"></span>
+            <span class="dot"></span>
+          </div>
+          <span style="margin-left:4px;font-size:11px;font-weight:600;">MTN Rwanda</span>
+        </div>
+        <div class="time" id="statusTime">12:00</div>
+        <div class="icons">
+          <svg width="16" height="12" viewBox="0 0 16 12" fill="none"><rect x="1" y="4" width="3" height="7" rx="0.5" fill="#fff"/><rect x="5" y="2.5" width="3" height="8.5" rx="0.5" fill="#fff"/><rect x="9" y="1" width="3" height="10" rx="0.5" fill="#fff"/><rect x="13" y="0" width="3" height="11" rx="0.5" fill="#FFC300"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="2" y="7" width="20" height="12" rx="2"/><path d="M6 11v4M10 11v4M14 11v4M18 11v4"/></svg>
+        </div>
+      </div>
+
+      <div class="notch"></div>
+
+      <!-- Dialer -->
+      <div class="dialer-screen" id="dialerScreen">
+        <div class="dialer-header">
+          <div class="brand">MTN <span>Rwanda</span></div>
+          <div class="sub">Marks Appeal System</div>
+        </div>
+        <div class="dialer-input-wrap">
+          <div class="code" id="dialerCode">*123#</div>
+          <div class="hint">Enter USSD code &amp; press Call</div>
+        </div>
+        <div class="keypad" id="keypad">
+          <button class="key" data-key="1">1<span class="sub"> </span></button>
+          <button class="key" data-key="2">2<span class="sub">ABC</span></button>
+          <button class="key" data-key="3">3<span class="sub">DEF</span></button>
+          <button class="key" data-key="4">4<span class="sub">GHI</span></button>
+          <button class="key" data-key="5">5<span class="sub">JKL</span></button>
+          <button class="key" data-key="6">6<span class="sub">MNO</span></button>
+          <button class="key" data-key="7">7<span class="sub">PQRS</span></button>
+          <button class="key" data-key="8">8<span class="sub">TUV</span></button>
+          <button class="key" data-key="9">9<span class="sub">WXYZ</span></button>
+          <button class="key star" data-key="*">*<span class="sub"> </span></button>
+          <button class="key" data-key="0">0<span class="sub">+</span></button>
+          <button class="key star" data-key="#">#<span class="sub"> </span></button>
+        </div>
+        <button class="call-btn" id="callBtn" onclick="dialUSSD()">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        </button>
+      </div>
+
+      <!-- USSD Session -->
+      <div class="ussd-screen" id="ussdScreen">
+        <div class="ussd-header">
+          <div class="service-code"><strong>*123#</strong> • USSD Session</div>
+          <button class="end-btn" onclick="endSession()">End</button>
+        </div>
+
+        <div class="ussd-messages" id="ussdMessages"></div>
+
+        <div class="ussd-input-area">
+          <input type="text" id="ussdInput" placeholder="Type response..." autocomplete="off">
+          <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+
+        <div class="quick-btns" id="quickBtns">
+          <button onclick="typeAndSend('1')">1</button>
+          <button onclick="typeAndSend('2')">2</button>
+          <button onclick="typeAndSend('3')">3</button>
+          <button onclick="typeAndSend('4')">4</button>
+          <button onclick="typeAndSend('5')">5</button>
+          <button onclick="typeAndSend('6')">6</button>
+          <button onclick="typeAndSend('7')">7</button>
+          <button onclick="typeAndSend('8')">8</button>
+          <button onclick="typeAndSend('9')">9</button>
+          <button onclick="typeAndSend('0')">0</button>
+          <button class="back-q" onclick="typeAndSend('0')">← Back</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Info -->
+  <div class="info-panel glass-card rounded-xl p-6">
+    <h3>Student USSD Portal</h3>
+    <p>Simulate a USSD session on your mobile network. Dial <strong style="color:#FFC300;">*123#</strong> to access the ULK Marks Appeal System.</p>
+    
+    <div class="phone-selector" style="margin-top:16px;">
+      <label>Simulate as:</label>
+      <select id="phoneSelect">
+        <option value="250780000001">BIKORIMANA Jean Baptiste</option>
+        <option value="250780000002">KAMANA Alice</option>
+        <option value="250780000003">HABIMANA Eric</option>
+        <option value="250780000004">UWERA Diane</option>
+        <option value="250780000005">NTIBIRINGWA Peter</option>
+      </select>
+    </div>
+
+    <div class="phone-selector" style="margin-top:4px;">
+      <label>Student ID:</label>
+      <select id="studentIdSelect">
+        <option value="2205000458">2205000458 — BIKORIMANA</option>
+        <option value="2205000459">2205000459 — KAMANA</option>
+        <option value="2205000460">2205000460 — HABIMANA</option>
+        <option value="2205000461">2205000461 — UWERA</option>
+        <option value="2205000462">2205000462 — NTIBIRINGWA</option>
+      </select>
+    </div>
+
+    <ul class="steps">
+      <li>Dial <strong>*123#</strong> from the phone keypad</li>
+      <li>Select an option from the menu</li>
+      <li>Enter your Student ID and PIN (1234)</li>
+      <li>View marks, submit appeals, check status</li>
+    </ul>
+
+    <div class="flex items-center gap-2 mt-4 pt-4 border-t border-gray-800">
+      <a href="/admin/login" class="text-xs text-gray-600 hover:text-gray-400 transition-colors flex items-center gap-1">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Admin Login
+      </a>
+      <span class="text-gray-700 text-xs">|</span>
+      <a href="/hod/login" class="text-xs text-gray-600 hover:text-gray-400 transition-colors flex items-center gap-1">
+        HOD Login
+      </a>
+      <span class="text-gray-700 text-xs">|</span>
+      <span class="text-xs text-gray-600">PIN: <strong style="color:#FFC300;">1234</strong> for all students</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── State ──
+  var sessionText = '';
+  var phoneNumber = '250780000001';
+  var isSessionActive = false;
+  var isProcessing = false;
+
+  // Update time in status bar
+  function updateTime() {
+    var now = new Date();
+    var h = String(now.getHours()).padStart(2, '0');
+    var m = String(now.getMinutes()).padStart(2, '0');
+    document.getElementById('statusTime').textContent = h + ':' + m;
+  }
+  updateTime();
+  setInterval(updateTime, 30000);
+
+  // Phone selector sync
+  document.getElementById('phoneSelect').addEventListener('change', function() {
+    phoneNumber = this.value;
+    if (this.value === '250780000001') document.getElementById('studentIdSelect').value = '2205000458';
+    else if (this.value === '250780000002') document.getElementById('studentIdSelect').value = '2205000459';
+    else if (this.value === '250780000003') document.getElementById('studentIdSelect').value = '2205000460';
+    else if (this.value === '250780000004') document.getElementById('studentIdSelect').value = '2205000461';
+    else if (this.value === '250780000005') document.getElementById('studentIdSelect').value = '2205000462';
+  });
+
+  document.getElementById('studentIdSelect').addEventListener('change', function() {
+    var map = {
+      '2205000458': '250780000001',
+      '2205000459': '250780000002',
+      '2205000460': '250780000003',
+      '2205000461': '250780000004',
+      '2205000462': '250780000005'
+    };
+    phoneNumber = map[this.value] || '250780000001';
+    document.getElementById('phoneSelect').value = phoneNumber;
+  });
+
+  // ── Dialer ──
+  document.querySelectorAll('#keypad .key').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var key = this.getAttribute('data-key');
+      // For USSD, we only show *123# — no editable input
+    });
+  });
+
+  // ── Dial USSD ──
+  function dialUSSD() {
+    var btn = document.getElementById('callBtn');
+    btn.disabled = true;
+    btn.style.opacity = '0.4';
+
+    // Show connecting animation
+    var dialer = document.getElementById('dialerScreen');
+    var ussdScreen = document.getElementById('ussdScreen');
+    var msgs = document.getElementById('ussdMessages');
+    msgs.innerHTML = '';
+
+    // Show typing indicator
+    var typingDiv = document.createElement('div');
+    typingDiv.className = 'ussd-msg system';
+    typingDiv.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
+    msgs.appendChild(typingDiv);
+
+    setTimeout(function() {
+      // Switch screens
+      dialer.style.display = 'none';
+      ussdScreen.classList.add('active');
+      isSessionActive = true;
+
+      // Clear typing
+      msgs.innerHTML = '';
+
+      // Send initial request
+      sessionText = '';
+      sendUSSDRequest('', function(response) {
+        addMessage(response, 'system');
+      });
+
+      btn.disabled = false;
+      btn.style.opacity = '1';
+    }, 1500);
+  }
+
+  // ── USSD Chat ──
+  function addMessage(text, sender) {
+    var msgs = document.getElementById('ussdMessages');
+    var div = document.createElement('div');
+    div.className = 'ussd-msg ' + sender;
+    div.textContent = text;
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function showTyping() {
+    var msgs = document.getElementById('ussdMessages');
+    var div = document.createElement('div');
+    div.className = 'ussd-msg system';
+    div.id = 'typingIndicator';
+    div.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function hideTyping() {
+    var el = document.getElementById('typingIndicator');
+    if (el) el.remove();
+  }
+
+  function sendUSSDRequest(text, callback) {
+    var formData = new FormData();
+    formData.append('phoneNumber', phoneNumber);
+    formData.append('text', text);
+    formData.append('sessionId', 'sim-' + Date.now());
+    formData.append('serviceCode', '*123#');
+
+    fetch('/ussd', { method: 'POST', body: formData })
+      .then(function(r) { return r.text(); })
+      .then(function(response) {
+        hideTyping();
+        callback(response);
+        if (response.startsWith('END')) {
+          sessionText = '';
+          // Auto-add "Session ended" after a moment
+          setTimeout(function() {
+            var msgs = document.getElementById('ussdMessages');
+            var div = document.createElement('div');
+            div.className = 'ussd-msg system';
+            div.style.fontSize = '11px';
+            div.style.color = '#666';
+            div.style.textAlign = 'center';
+            div.textContent = '— Session ended —';
+            msgs.appendChild(div);
+            msgs.scrollTop = msgs.scrollHeight;
+          }, 500);
+        }
+      })
+      .catch(function(err) {
+        hideTyping();
+        addMessage('Network error. Please try again.', 'system');
+      });
+  }
+
+  function sendMessage() {
+    if (isProcessing) return;
+    var input = document.getElementById('ussdInput');
+    var text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+    isProcessing = true;
+    document.getElementById('sendBtn').disabled = true;
+
+    addMessage(text, 'user');
+
+    // Build session text
+    if (text === '0' && sessionText !== '') {
+      sessionText = '';
+    } else {
+      sessionText = sessionText ? sessionText + '*' + text : text;
+    }
+
+    showTyping();
+    sendUSSDRequest(sessionText, function(response) {
+      addMessage(response, 'system');
+      isProcessing = false;
+      document.getElementById('sendBtn').disabled = false;
+      document.getElementById('ussdInput').focus();
+    });
+  }
+
+  function typeAndSend(val) {
+    if (isProcessing) return;
+    document.getElementById('ussdInput').value = val;
+    sendMessage();
+  }
+
+  function endSession() {
+    sessionText = '';
+    isSessionActive = false;
+    var ussdScreen = document.getElementById('ussdScreen');
+    var dialer = document.getElementById('dialerScreen');
+    ussdScreen.classList.remove('active');
+    ussdScreen.querySelector('.ussd-messages').innerHTML = '';
+    dialer.style.display = 'flex';
+    document.getElementById('callBtn').disabled = false;
+    document.getElementById('callBtn').style.opacity = '1';
+  }
+
+  // Enter key in input
+  document.getElementById('ussdInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+</script>
+{% endblock %}

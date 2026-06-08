@@ -24,7 +24,8 @@ def _ussd(text):
 
 def _main_menu() -> str:
     return (
-        "CON Welcome to ULK Marks Appeal System\n"
+        "CON Dear Student, welcome to ULK Marks Appeal System.\n"
+        "Please select an option:\n"
         "1. View my marks\n"
         "2. Submit an appeal\n"
         "3. Check appeal status\n"
@@ -64,11 +65,11 @@ def authenticate_student(mysql, student_id: str, pin: str, phone: str) -> str:
     row = c.fetchone()
 
     if not row:
-        return "No PIN found. Contact admin or use option 4 to set your PIN."
+        return "No PIN registered. Please use option 4 to set your PIN."
 
     if row['locked']:
         _log_access(mysql, student_id, phone, 'LOGIN_LOCKED', False)
-        return "Account locked. Use option 4 to reset your PIN via OTP."
+        return "Account is locked. Please use option 4 to reset your PIN via OTP."
 
     if sha256(pin) == row['pin_hash']:
         c2 = mysql.connection.cursor()
@@ -91,9 +92,9 @@ def authenticate_student(mysql, student_id: str, pin: str, phone: str) -> str:
     mysql.connection.commit()
 
     if locked:
-        return "Account locked after 3 failed attempts. Use option 4 to reset PIN."
+        return "Account locked after 3 failed attempts. Use option 4 to reset your PIN."
     remaining = MAX_PIN_ATTEMPTS - new_fails
-    return f"Wrong PIN. {remaining} attempt(s) remaining."
+    return f"Incorrect PIN. You have {remaining} attempt(s) remaining."
 
 
 def _log_access(mysql, student_id: str, phone: str, action: str, success: bool):

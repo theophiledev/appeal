@@ -517,7 +517,8 @@ def ussd():
         # ── WELCOME MENU ─────────────────────────────────────────────────────
         if text == '':
             return _ussd(
-                "CON Welcome to ULK Marks Appeal System\n"
+                "CON Dear Student, welcome to ULK Marks Appeal System.\n"
+                "Please select an option:\n"
                 "1. View my marks\n"
                 "2. Submit an appeal\n"
                 "3. Check appeal status\n"
@@ -526,7 +527,7 @@ def ussd():
             )
 
         if text == '0':
-            return _ussd("END Thank you for using the ULK Marks Appeal System.")
+            return _ussd("END Thank you for using the ULK Marks Appeal System. Goodbye.")
 
         # ════════════════════════════════════════════════════════════════════
         # 1. VIEW MARKS  (Student: view marks / view results)
@@ -534,14 +535,14 @@ def ussd():
         # ════════════════════════════════════════════════════════════════════
         if steps[0] == '1':
             if len(steps) == 1:
-                return _ussd("CON Enter your Student ID:\n0. Back")
+                return _ussd("CON Please enter your Student ID:\n0. Back to menu")
             if len(steps) == 2:
                 if steps[1] == '0':
                     return _ussd(_main_menu())
-                return _ussd("CON Enter your 4-digit PIN:\n0. Back")
+                return _ussd("CON Kindly enter your 4-digit PIN:\n0. Back")
             if len(steps) == 3:
                 if steps[2] == '0':
-                    return _ussd("CON Enter your Student ID:\n0. Back")
+                    return _ussd("CON Please enter your Student ID:\n0. Back to menu")
                 student_id = steps[1]
                 auth = authenticate_student(mysql, student_id, steps[2], phone_number)
                 if auth != 'OK':
@@ -555,7 +556,7 @@ def ussd():
                 if not rows:
                     return _ussd("END No results found for your Student ID.")
                 body = "\n".join(f"{r['module_name']}: {r['mark']}" for r in rows)
-                return _ussd(f"END Your Results:\n{body}")
+                return _ussd(f"END Here are your results, dear student:\n{body}")
 
         # ════════════════════════════════════════════════════════════════════
         # 2. SUBMIT APPEAL  (Student: submit appeal)
@@ -563,14 +564,14 @@ def ussd():
         # ════════════════════════════════════════════════════════════════════
         if steps[0] == '2':
             if len(steps) == 1:
-                return _ussd("CON Enter your Student ID:\n0. Back")
+                return _ussd("CON Please enter your Student ID:\n0. Back to menu")
             if len(steps) == 2:
                 if steps[1] == '0':
                     return _ussd(_main_menu())
-                return _ussd("CON Enter your 4-digit PIN:\n0. Back")
+                return _ussd("CON Kindly enter your 4-digit PIN:\n0. Back")
             if len(steps) == 3:
                 if steps[2] == '0':
-                    return _ussd("CON Enter your Student ID:\n0. Back")
+                    return _ussd("CON Please enter your Student ID:\n0. Back to menu")
                 student_id = steps[1]
                 auth = authenticate_student(mysql, student_id, steps[2], phone_number)
                 if auth != 'OK':
@@ -583,7 +584,7 @@ def ussd():
                 modules = c.fetchall()
                 if not modules:
                     return _ussd("END No modules found for your Student ID.")
-                menu = "CON Select module to appeal:\n"
+                menu = "CON Please select the module you wish to appeal:\n"
                 for i, m in enumerate(modules, 1):
                     menu += f"{i}. {m['module_name']} ({m['mark']})\n"
                 menu += "0. Back"
@@ -591,7 +592,7 @@ def ussd():
             if len(steps) == 4:
                 if steps[3] == '0':
                     return _ussd(_main_menu())
-                return _ussd("CON Enter your reason for appeal:\n0. Cancel")
+                return _ussd("CON Kindly state your reason for appeal:\n0. Cancel")
             if len(steps) == 5:
                 if steps[4] == '0':
                     return _ussd(_main_menu())
@@ -605,7 +606,7 @@ def ussd():
                 )
                 modules = [r['module_name'] for r in c.fetchall()]
                 if module_index < 0 or module_index >= len(modules):
-                    return _ussd("END Invalid module selection. Please try again.")
+                    return _ussd("END Invalid selection. Please try again.")
                 selected = modules[module_index]
                 c.execute(
                     "SELECT id FROM appeal_status WHERE status_name='Pending'"
@@ -621,8 +622,8 @@ def ussd():
                 log_access(student_id, phone_number, 'APPEAL_SUBMIT', True)
                 mysql.connection.commit()
                 return _ussd(
-                    f"END Appeal submitted for {selected}.\n"
-                    "Your HOD will review it shortly. Thank you."
+                    f"END Your appeal for {selected} has been received.\n"
+                    "The HOD will review it. Thank you for reaching out."
                 )
 
         # ════════════════════════════════════════════════════════════════════
@@ -631,14 +632,14 @@ def ussd():
         # ════════════════════════════════════════════════════════════════════
         if steps[0] == '3':
             if len(steps) == 1:
-                return _ussd("CON Enter your Student ID:\n0. Back")
+                return _ussd("CON Please enter your Student ID:\n0. Back to menu")
             if len(steps) == 2:
                 if steps[1] == '0':
                     return _ussd(_main_menu())
-                return _ussd("CON Enter your 4-digit PIN:\n0. Back")
+                return _ussd("CON Kindly enter your 4-digit PIN:\n0. Back")
             if len(steps) == 3:
                 if steps[2] == '0':
-                    return _ussd("CON Enter your Student ID:\n0. Back")
+                    return _ussd("CON Please enter your Student ID:\n0. Back to menu")
                 student_id = steps[1]
                 auth = authenticate_student(mysql, student_id, steps[2], phone_number)
                 if auth != 'OK':
@@ -655,11 +656,11 @@ def ussd():
                 """, (student_id,))
                 rows = c.fetchall()
                 if not rows:
-                    return _ussd("END No appeals found for your Student ID.")
-                body = "END Your recent appeals:\n"
+                    return _ussd("END You have no appeals on record.")
+                body = "END Your recent appeal requests:\n\n"
                 for r in rows:
-                    reviewed = f" (by {r['reviewed_by']})" if r['reviewed_by'] else ''
-                    comment = f" - {r['review_comment']}" if r['review_comment'] else ''
+                    reviewed = f" (reviewed by {r['reviewed_by']})" if r['reviewed_by'] else ''
+                    comment = f"\n   Comment: {r['review_comment']}" if r['review_comment'] else ''
                     body += f"{r['module_name']}: {r['status_name']}{reviewed}{comment}\n"
                 return _ussd(body.strip())
 
@@ -669,7 +670,7 @@ def ussd():
         # ════════════════════════════════════════════════════════════════════
         if steps[0] == '4':
             if len(steps) == 1:
-                return _ussd("CON Enter your Student ID to reset PIN:\n0. Back")
+                return _ussd("CON Please enter your Student ID to reset PIN:\n0. Back to menu")
             if len(steps) == 2:
                 if steps[1] == '0':
                     return _ussd(_main_menu())
@@ -678,11 +679,11 @@ def ussd():
                 c.execute("SELECT phone FROM students WHERE student_id=%s", (student_id,))
                 st = c.fetchone()
                 if not st:
-                    return _ussd("END Student ID not found.")
+                    return _ussd("END Student ID not found in our system.")
                 send_otp(st['phone'])
                 return _ussd(
-                    "CON An OTP has been sent to your registered number.\n"
-                    "Enter the OTP:"
+                    "CON An OTP has been sent to your registered mobile number.\n"
+                    "Please enter the OTP:"
                 )
             if len(steps) == 3:
                 student_id = steps[1]
@@ -690,15 +691,15 @@ def ussd():
                 c.execute("SELECT phone FROM students WHERE student_id=%s", (student_id,))
                 st = c.fetchone()
                 if not st or not verify_otp(st['phone'], steps[2]):
-                    return _ussd("END Invalid or expired OTP. Please restart.")
-                return _ussd("CON OTP verified. Enter your new 4-digit PIN:")
+                    return _ussd("END Invalid or expired OTP. Please start again.")
+                return _ussd("CON OTP verified. Kindly enter your new 4-digit PIN:")
             if len(steps) == 4:
                 if len(steps[3]) != 4 or not steps[3].isdigit():
-                    return _ussd("END PIN must be exactly 4 digits. Please restart.")
-                return _ussd("CON Confirm your new PIN:")
+                    return _ussd("END PIN must be exactly 4 digits. Please start again.")
+                return _ussd("CON Please confirm your new PIN:")
             if len(steps) == 5:
                 if steps[3] != steps[4]:
-                    return _ussd("END PINs do not match. Please restart.")
+                    return _ussd("END PINs do not match. Please start again.")
                 pin_hash = sha256(steps[3])
                 c2 = cur(False)
                 c2.execute("""
@@ -708,13 +709,13 @@ def ussd():
                                             failed_attempts=0, locked=0
                 """, (steps[1], pin_hash))
                 mysql.connection.commit()
-                return _ussd("END PIN reset successfully. You may now log in.")
+                return _ussd("END Your PIN has been reset successfully. You may now log in.")
 
-        return _ussd("END Invalid input. Please dial again.")
+        return _ussd("END Invalid option. Please dial *123# and try again.")
 
     except Exception as exc:
         app.logger.error(f"[USSD] {exc}")
-        return _ussd("END Technical error. Please try again later.")
+        return _ussd("END System error. Please try again later or contact support.")
 
 
 
@@ -729,6 +730,12 @@ def ussd_simulator():
     if not session.get('loggedin'):
         return redirect(url_for('admin_login'))
     return render_template('ussd_simulator.html')
+
+
+@app.route('/student/ussd')
+def student_ussd():
+    """Student-facing USSD simulator — no login required."""
+    return render_template('student_ussd.html')
 
 
 # =============================================================================
