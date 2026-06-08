@@ -5,7 +5,7 @@ USE appeal_db;
 
 -- ── HOD account (password: hod123) ─────────────────────────────────────────
 INSERT IGNORE INTO admins (username, password, role) VALUES
-    ('hod1', '9d0c0e42ceb28abd8f9acc6d094f4f7f4a886b5a6f5e0a4b8c7d6e5f4a3b2c1d', 'hod');
+    ('hod1', '5c8473579466adb756fa9e042efc8d7756217c5f4c950731fcf96bd65ba184e9', 'hod');
 
 -- ── Sample students ────────────────────────────────────────────────────────
 INSERT IGNORE INTO students (student_id, name, phone) VALUES
