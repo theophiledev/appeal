@@ -22,7 +22,7 @@ from datetime import datetime, timedelta
 from functools import wraps
 
 from flask import (Flask, request, render_template, redirect,
-                   session, url_for, flash)
+                   session, url_for, flash, send_from_directory)
 from flask_mysqldb import MySQL
 import MySQLdb.cursors
 
@@ -736,6 +736,13 @@ def ussd_simulator():
 def student_ussd():
     """Student-facing USSD simulator — no login required."""
     return render_template('student_ussd.html')
+
+
+@app.route('/diagrams/view_diagrams.html')
+def view_diagrams():
+    """Serve the system diagrams HTML viewer."""
+    diag_dir = os.path.join(app.root_path, 'diagrams')
+    return send_from_directory(diag_dir, 'view_diagrams.html')
 
 
 # =============================================================================

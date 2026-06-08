@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ULK Marks Appeal System — All Diagrams</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  body { background: #0f172a; color: #e2e8f0; font-family: 'Segoe UI', Arial, sans-serif; padding: 40px 20px; }
+  .container { max-width: 1100px; margin: 0 auto; }
+  h1 { font-size: 28px; font-weight: 700; color: #fbbf24; text-align: center; margin-bottom: 8px; }
+  .subtitle { text-align: center; color: #94a3b8; font-size: 14px; margin-bottom: 40px; }
+  .diagram-section { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 30px; margin-bottom: 40px; box-shadow: 0 4px 24px rgba(0,0,0,0.3); }
+  .diagram-section h2 { font-size: 20px; color: #60a5fa; margin-top: 0; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #334155; }
+  .diagram-section h2 span { color: #64748b; font-weight: 400; }
+  .mermaid { background: #fff; border-radius: 12px; padding: 20px; overflow-x: auto; text-align: center; }
+  .mermaid svg { max-width: 100%; height: auto; }
+  .actions { text-align: center; margin: 20px 0 40px; }
+  .actions button { background: #3b82f6; color: #fff; border: none; padding: 10px 24px; border-radius: 8px; font-size: 14px; cursor: pointer; margin: 0 6px; }
+  .actions button:hover { background: #2563eb; }
+  .footer { text-align: center; color: #475569; font-size: 12px; margin-top: 40px; }
+  .legend { background: #0f172a; border-radius: 8px; padding: 16px; margin-bottom: 20px; font-size: 13px; color: #94a3b8; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>ULK Marks Appeal System</h1>
+  <p class="subtitle">Chapter Four — System Analysis, Design and Implementation Diagrams</p>
+
+  <div class="actions">
+    <button onclick="expandAll()">Expand All</button>
+    <button onclick="collapseAll()">Collapse All</button>
+    <button onclick="window.print()">Print / Save PDF</button>
+  </div>
+
+  <!-- 1. CONTEXT DIAGRAM -->
+  <div class="diagram-section">
+    <h2>1. <span>Context Diagram (DFD Level 0)</span></h2>
+    <div class="legend">The system as a single process with three external entities: Student (via Africa's Talking USSD Gateway), Administrator, and Head of Department.</div>
+    <div class="mermaid">
+graph TD
+    subgraph External["External Entities"]
+        S["Student<br/>(Mobile Phone)"]
+        A["Administrator<br/>(Web Portal)"]
+        H["Head of Department<br/>(Web Portal)"]
+    end
+    subgraph Gateway["USSD Gateway"]
+        AT["Africa's Talking<br/>USSD Gateway"]
+    end
+    subgraph System["System"]
+        SYS["USSD-Based<br/>Marks Appeal<br/>System"]
+    end
+    S -- "USSD Input (ID, PIN, selection)" --> AT
+    AT -- "USSD Response (menus, marks)" --> S
+    AT -- "HTTP POST (sessionId, phoneNumber, text)" --> SYS
+    SYS -- "HTTP Response (CON / END)" --> AT
+    A -- "Login, Status Updates" --> SYS
+    SYS -- "Dashboard, Appeals, Logs" --> A
+    H -- "Login, Recommendations" --> SYS
+    SYS -- "Departmental Appeals" --> H
+    </div>
+  </div>
+
+  <!-- 2. DFD LEVEL 1 -->
+  <div class="diagram-section">
+    <h2>2. <span>Data Flow Diagram — Level 1</span></h2>
+    <div class="legend">Five primary processes with their data stores: Authenticate Student, View Marks, Submit Appeal, Check Appeal Status, Manage Appeals.</div>
+    <div class="mermaid">
+graph TD
+    S[Student]
+    AD[Administrator]
+    HOD[Head of Department]
+    P1["1.0 Authenticate<br/>Student"]
+    P2["2.0 View<br/>Marks"]
+    P3["3.0 Submit<br/>Appeal"]
+    P4["4.0 Check<br/>Appeal Status"]
+    P5["5.0 Manage<br/>Appeals"]
+    D1[(pin_<br/>credentials)]
+    D2[(marks)]
+    D3[(appeals)]
+    D4[(appeal_<br/>status)]
+    D5[(access_<br/>audit)]
+    D6[(admins)]
+    S --> P1
+    P1 <--> D1
+    P1 --> D5
+    P1 --> P2
+    P2 --> D2
+    P2 --> S
+    P1 --> P3
+    P3 --> D2
+    P3 --> D3
+    P3 --> D5
+    P3 --> S
+    P1 --> P4
+    P4 --> D3
+    P4 --> D4
+    P4 --> S
+    AD --> P5
+    HOD --> P5
+    P5 <--> D3
+    P5 --> D4
+    P5 --> D6
+    P5 --> D5
+    P5 --> AD
+    P5 --> HOD
+    </div>
+  </div>
+
+  <!-- 3. DFD LEVEL 2 -->
+  <div class="diagram-section">
+    <h2>3. <span>Data Flow Diagram — Level 2 (Authenticate Student)</span></h2>
+    <div class="legend">Decomposition of Process 1.0 into six sub-processes: Receive Student ID, Receive PIN, Hash PIN, Compare Hash vs DB, Enforce Lockout Policy, Log Event.</div>
+    <div class="mermaid">
+graph TD
+    S[Student]
+    SP1["1.1 Receive<br/>Student ID"]
+    SP2["1.2 Receive<br/>PIN"]
+    SP3["1.3 Hash<br/>PIN"]
+    SP4["1.4 Compare<br/>Hash vs DB"]
+    SP5["1.5 Enforce<br/>Lockout"]
+    SP6["1.6 Log<br/>Event"]
+    DPIN[(pin_<br/>credentials)]
+    DAUDIT[(access_<br/>audit)]
+    S -- "student_id" --> SP1
+    SP1 --> SP2
+    S -- "PIN" --> SP2
+    SP2 -- "plaintext PIN" --> SP3
+    SP3 -- "SHA-256 hash" --> SP4
+    SP4 <--> DPIN
+    SP4 -- "match result" --> SP5
+    SP5 -- "update attempts" --> DPIN
+    SP5 -- "auth outcome" --> SP6
+    SP6 --> DAUDIT
+    SP6 -- "result prompt" --> S
+    </div>
+  </div>
+
+  <!-- 4. USE CASE DIAGRAM -->
+  <div class="diagram-section">
+    <h2>4. <span>Use Case Diagram</span></h2>
+    <div class="legend">Three actors (Student, Administrator, HOD) with 14 use cases. UC4, UC5, UC6 include UC2 (Authenticate via PIN). UC3 extends UC2.</div>
+    <div class="mermaid">
+graph TB
+    ST[Student]
+    AD[Administrator]
+    HD[Head of Department]
+    UC1["UC1: Register PIN"]
+    UC2["UC2: Authenticate via PIN"]
+    UC3["UC3: Reset PIN via OTP"]
+    UC4["UC4: View Marks"]
+    UC5["UC5: Submit Marks Appeal"]
+    UC6["UC6: Check Appeal Status"]
+    UC7["UC7: Login to Admin Portal"]
+    UC8["UC8: View All Appeals"]
+    UC9["UC9: Update Appeal Status"]
+    UC10["UC10: View Audit Logs"]
+    UC11["UC11: Logout"]
+    UC12["UC12: Login to HOD Portal"]
+    UC13["UC13: View Departmental Appeals"]
+    UC14["UC14: Submit Recommendation"]
+    ST --> UC1
+    ST --> UC2
+    ST --> UC3
+    ST --> UC4
+    ST --> UC5
+    ST --> UC6
+    AD --> UC7
+    AD --> UC8
+    AD --> UC9
+    AD --> UC10
+    AD --> UC11
+    HD --> UC12
+    HD --> UC13
+    HD --> UC14
+    UC4 -.->|<<include>>| UC2
+    UC5 -.->|<<include>>| UC2
+    UC6 -.->|<<include>>| UC2
+    UC3 -.->|<<extend>>| UC2
+    </div>
+  </div>
+
+  <!-- 5. SEQUENCE DIAGRAM - APPEAL -->
+  <div class="diagram-section">
+    <h2>5. <span>Sequence Diagram — Student Submits an Appeal</span></h2>
+    <div class="legend">Complete interaction flow showing Student, Africa's Talking Gateway, Flask backend, and MySQL database for the Submit Appeal use case.</div>
+    <div class="mermaid">
+sequenceDiagram
+    participant S as Student
+    participant P as Mobile Phone
+    participant AT as Africa's Talking<br/>USSD Gateway
+    participant F as Flask /ussd<br/>Endpoint
+    participant DB as MySQL Database
+    S->>P: Dial *123#
+    P->>AT: USSD request
+    AT->>F: POST /ussd (text="")
+    F-->>AT: CON Welcome menu
+    AT-->>P: Display menu
+    S->>P: Select "2"
+    P->>AT: text="2"
+    AT->>F: POST /ussd (text="2")
+    F-->>AT: CON Enter Student ID
+    S->>P: Enter Student ID
+    P->>AT: text="2*STU001"
+    AT->>F: POST /ussd (text="2*STU001")
+    F-->>AT: CON Enter your PIN
+    S->>P: Enter PIN
+    P->>AT: text="2*STU001*1234"
+    AT->>F: POST /ussd (text="2*STU001*1234")
+    F->>DB: Query pin_credentials
+    DB-->>F: Record found
+    F->>DB: Reset failed_attempts=0
+    F->>DB: Query marks
+    DB-->>F: Module list
+    F-->>AT: CON Select module
+    S->>P: Select module "1"
+    P->>AT: text="2*STU001*1234*1"
+    AT->>F: POST /ussd
+    F-->>AT: CON Enter reason
+    S->>P: Type reason
+    P->>AT: text="2*STU001*1234*1*Marking error"
+    AT->>F: POST /ussd
+    F->>DB: INSERT INTO appeals
+    F->>DB: INSERT INTO access_audit
+    F-->>AT: END Appeal submitted
+    AT-->>P: Display confirmation
+    </div>
+  </div>
+
+  <!-- 6. SEQUENCE DIAGRAM - ADMIN -->
+  <div class="diagram-section">
+    <h2>6. <span>Sequence Diagram — Administrator Updates Appeal Status</span></h2>
+    <div class="legend">Interaction showing admin login, dashboard view, and status update flow through Flask to MySQL.</div>
+    <div class="mermaid">
+sequenceDiagram
+    participant A as Admin
+    participant B as Web Browser
+    participant F as Flask Web Server
+    participant DB as MySQL Database
+    A->>B: Navigate to /admin/login
+    B->>F: GET /admin/login
+    F-->>B: Login page
+    A->>B: Enter credentials
+    B->>F: POST /admin/login
+    F->>DB: Query admins
+    DB-->>F: Admin record found
+    F-->>B: Set session, redirect
+    B-->>A: Dashboard loaded
+    A->>B: Select "Approved" & click Update
+    B->>F: POST /hod/manage_appeal/5
+    F->>DB: UPDATE appeals SET status_id=2
+    DB-->>F: Row updated
+    F-->>B: Redirect with flash message
+    B-->>A: "Appeal status updated successfully"
+    </div>
+  </div>
+
+  <!-- 7. ERD -->
+  <div class="diagram-section">
+    <h2>7. <span>Entity Relationship Diagram (ERD)</span></h2>
+    <div class="legend">Seven entities with primary keys, foreign keys, and relationships: students (1) → marks (M), students (1) → appeals (M), students (1) → pin_credentials (1), students (1) → access_audit (M), appeal_status (1) → appeals (M).</div>
+    <div class="mermaid">
+erDiagram
+    students ||--o{ marks : "has"
+    students ||--o{ appeals : "submits"
+    students ||--|| pin_credentials : "has"
+    students ||--o{ access_audit : "generates"
+    appeal_status ||--o{ appeals : "classifies"
+    students {
+        varchar student_id PK
+        varchar full_name
+        varchar phone_number
+        varchar department
+        varchar email
+    }
+    marks {
+        int id PK
+        varchar student_id FK
+        varchar module_name
+        int mark
+        varchar academic_year
+        varchar semester
+    }
+    appeals {
+        int id PK
+        varchar student_id FK
+        varchar module_name
+        text reason
+        int status_id FK
+        timestamp submitted_at
+        timestamp resolved_at
+        text hod_recommendation
+    }
+    appeal_status {
+        int id PK
+        varchar status_name
+    }
+    pin_credentials {
+        int id PK
+        varchar student_id FK
+        varchar pin_hash
+        int failed_attempts
+        tinyint is_locked
+        varchar otp_code
+        datetime otp_expiry
+    }
+    access_audit {
+        int id PK
+        varchar student_id FK
+        varchar phone_number
+        varchar action
+        tinyint success
+        varchar session_id
+        timestamp timestamp
+    }
+    admins {
+        int id PK
+        varchar username
+        varchar password
+    }
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    ULK Marks Appeal System — Generated from diagrams/ALL_DIAGRAMS.md<br/>
+    University Libre de Kigali (ULK) — Chapter Four Documentation
+  </div>
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'default',
+    themeVariables: {
+      primaryColor: '#3b82f6',
+      primaryTextColor: '#1e293b',
+      primaryBorderColor: '#60a5fa',
+      lineColor: '#64748b',
+      secondaryColor: '#fbbf24',
+      tertiaryColor: '#1e293b'
+    },
+    flowchart: { useMaxWidth: true, htmlLabels: true },
+    sequence: { showSequenceNumbers: true }
+  });
+
+  function expandAll() {
+    document.querySelectorAll('.diagram-section').forEach(s => s.style.display = 'block');
+  }
+  function collapseAll() {
+    document.querySelectorAll('.diagram-section').forEach((s, i) => {
+      s.style.display = i === 0 ? 'block' : 'none';
+    });
+  }
+</script>
+</body>
+</html>
