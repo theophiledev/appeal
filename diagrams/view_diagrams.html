@@ -141,24 +141,24 @@ graph TD
     <h2>4. <span>Use Case Diagram</span></h2>
     <div class="legend">Three actors (Student, Administrator, HOD) with 14 use cases. UC4, UC5, UC6 include UC2 (Authenticate via PIN). UC3 extends UC2.</div>
     <div class="mermaid">
-graph TB
-    ST[Student]
-    AD[Administrator]
-    HD[Head of Department]
-    UC1["UC1: Register PIN"]
-    UC2["UC2: Authenticate via PIN"]
-    UC3["UC3: Reset PIN via OTP"]
-    UC4["UC4: View Marks"]
-    UC5["UC5: Submit Marks Appeal"]
-    UC6["UC6: Check Appeal Status"]
-    UC7["UC7: Login to Admin Portal"]
-    UC8["UC8: View All Appeals"]
-    UC9["UC9: Update Appeal Status"]
-    UC10["UC10: View Audit Logs"]
-    UC11["UC11: Logout"]
-    UC12["UC12: Login to HOD Portal"]
-    UC13["UC13: View Departmental Appeals"]
-    UC14["UC14: Submit Recommendation"]
+flowchart LR
+    ST("Student")
+    AD("Administrator")
+    HD("HOD")
+    UC1["UC1 Register PIN"]
+    UC2["UC2 Authenticate via PIN"]
+    UC3["UC3 Reset PIN via OTP"]
+    UC4["UC4 View Marks"]
+    UC5["UC5 Submit Marks Appeal"]
+    UC6["UC6 Check Appeal Status"]
+    UC7["UC7 Login Admin Portal"]
+    UC8["UC8 View All Appeals"]
+    UC9["UC9 Update Appeal Status"]
+    UC10["UC10 View Audit Logs"]
+    UC11["UC11 Logout"]
+    UC12["UC12 Login HOD Portal"]
+    UC13["UC13 View Dept Appeals"]
+    UC14["UC14 Submit Recommendation"]
     ST --> UC1
     ST --> UC2
     ST --> UC3
@@ -173,10 +173,10 @@ graph TB
     HD --> UC12
     HD --> UC13
     HD --> UC14
-    UC4 -.->|<<include>>| UC2
-    UC5 -.->|<<include>>| UC2
-    UC6 -.->|<<include>>| UC2
-    UC3 -.->|<<extend>>| UC2
+    UC4 -.->|include| UC2
+    UC5 -.->|include| UC2
+    UC6 -.->|include| UC2
+    UC3 -.->|extend| UC2
     </div>
   </div>
 

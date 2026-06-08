@@ -126,29 +126,25 @@ graph TD
 ## 4. Use Case Diagram
 
 ```mermaid
-graph TB
-    subgraph Actors
-        ST[Student]
-        AD[Administrator]
-        HD[Head of Department]
-    end
+flowchart LR
+    ST("Student")
+    AD("Administrator")
+    HD("HOD")
 
-    subgraph "USSD-Based Marks Appeal System"
-        UC1["UC1: Register PIN"]
-        UC2["UC2: Authenticate via PIN"]
-        UC3["UC3: Reset PIN via OTP"]
-        UC4["UC4: View Marks"]
-        UC5["UC5: Submit Marks Appeal"]
-        UC6["UC6: Check Appeal Status"]
-        UC7["UC7: Login to Admin Portal"]
-        UC8["UC8: View All Appeals"]
-        UC9["UC9: Update Appeal Status"]
-        UC10["UC10: View Audit Logs"]
-        UC11["UC11: Logout"]
-        UC12["UC12: Login to HOD Portal"]
-        UC13["UC13: View Departmental Appeals"]
-        UC14["UC14: Submit Recommendation"]
-    end
+    UC1["UC1 Register PIN"]
+    UC2["UC2 Authenticate via PIN"]
+    UC3["UC3 Reset PIN via OTP"]
+    UC4["UC4 View Marks"]
+    UC5["UC5 Submit Marks Appeal"]
+    UC6["UC6 Check Appeal Status"]
+    UC7["UC7 Login Admin Portal"]
+    UC8["UC8 View All Appeals"]
+    UC9["UC9 Update Appeal Status"]
+    UC10["UC10 View Audit Logs"]
+    UC11["UC11 Logout"]
+    UC12["UC12 Login HOD Portal"]
+    UC13["UC13 View Dept Appeals"]
+    UC14["UC14 Submit Recommendation"]
 
     ST --> UC1
     ST --> UC2
@@ -165,10 +161,10 @@ graph TB
     HD --> UC13
     HD --> UC14
 
-    UC4 -.->|<<include>>| UC2
-    UC5 -.->|<<include>>| UC2
-    UC6 -.->|<<include>>| UC2
-    UC3 -.->|<<extend>>| UC2
+    UC4 -.->|include| UC2
+    UC5 -.->|include| UC2
+    UC6 -.->|include| UC2
+    UC3 -.->|extend| UC2
 ```
 
 ---

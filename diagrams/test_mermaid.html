@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>body{background:#1e293b;padding:30px}.mermaid{background:#fff;padding:20px;border-radius:12px}</style>
+</head>
+<body>
+<h2 style="color:#fff">Test: Use Case Diagram</h2>
+<div class="mermaid">
+graph LR
+    A["Student"]
+    B["Administrator"]
+    C["HOD"]
+    U1["Register PIN"]
+    U2["Authenticate via PIN"]
+    A --> U1
+    A --> U2
+    B --> U1
+    U2 -.->|include| U1
+</div>
+<h2 style="color:#fff">Test 2: Include with guillemets</h2>
+<div class="mermaid">
+graph LR
+    A[Student]
+    B[View Marks]
+    A --> B
+    B -.->|«include»| A
+</div>
+<h2 style="color:#fff">Test 3: Extend</h2>
+<div class="mermaid">
+graph LR
+    A[Student]
+    B[Reset PIN]
+    C[Authenticate]
+    A --> B
+    A --> C
+    B -.->|«extend»| C
+</div>
+<script>mermaid.initialize({startOnLoad:true,theme:'default'})</script>
+</body>
+</html>
