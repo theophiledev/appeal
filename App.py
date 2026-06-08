@@ -74,6 +74,17 @@ def cur(dict_cursor=True):
     return mysql.connection.cursor()
 
 
+def _has_review_comment(c) -> str:
+    """Check if review_comment column exists; return SQL fragment."""
+    c.execute("""
+        SELECT COUNT(*) AS cnt FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_NAME='appeals' AND COLUMN_NAME='review_comment'
+          AND TABLE_SCHEMA=(SELECT DATABASE())
+    """)
+    row = c.fetchone()
+    return ', a.review_comment' if row and row['cnt'] > 0 else ', NULL AS review_comment'
+
+
 def log_access(student_id: str, phone: str, action: str, success: bool):
     c = cur(False)
     c.execute(
@@ -231,9 +242,10 @@ def admin_dashboard():
     audit_log = c.fetchall()
 
     # Recent appeals
-    c.execute("""
+    rc_col = _has_review_comment(cur())
+    c.execute(f"""
         SELECT a.id, a.student_id, s.name, a.module_name, a.reason,
-               a.review_comment, st.status_name, a.created_at
+               st.status_name, a.created_at{rc_col}
         FROM   appeals a
         JOIN   students s      ON a.student_id = s.student_id
         JOIN   appeal_status st ON a.status_id = st.id
@@ -372,10 +384,11 @@ def hod_login():
 @hod_required
 def hod_dashboard():
     c = cur()
-    c.execute("""
+    rc_col = _has_review_comment(cur())
+    c.execute(f"""
         SELECT a.id, a.student_id, st.name AS student_name,
-               a.module_name, a.reason, a.review_comment, a.created_at,
-               s.status_name AS status
+               a.module_name, a.reason, a.created_at,
+               s.status_name AS status{rc_col}
         FROM   appeals a
         JOIN   appeal_status s ON a.status_id = s.id
         JOIN   students st     ON a.student_id = st.student_id
@@ -409,10 +422,17 @@ def hod_manage_appeal(appeal_id):
     row = c.fetchone()
     if row:
         c2 = cur(False)
-        c2.execute(
-            "UPDATE appeals SET status_id=%s, reviewed_by=%s, review_comment=%s WHERE id=%s",
-            (row['id'], session['username'], comment if comment else None, appeal_id)
-        )
+        has_rc_col = _has_review_comment(cur()) != ', NULL AS review_comment'
+        if has_rc_col:
+            c2.execute(
+                "UPDATE appeals SET status_id=%s, reviewed_by=%s, review_comment=%s WHERE id=%s",
+                (row['id'], session['username'], comment if comment else None, appeal_id)
+            )
+        else:
+            c2.execute(
+                "UPDATE appeals SET status_id=%s, reviewed_by=%s WHERE id=%s",
+                (row['id'], session['username'], appeal_id)
+            )
         mysql.connection.commit()
         flash(f'Appeal #{appeal_id} marked as {new_status}.', 'success')
     else:
@@ -624,9 +644,10 @@ def ussd():
                 if auth != 'OK':
                     return _ussd(f"END {auth}")
                 c = cur()
-                c.execute("""
+                rc_col = _has_review_comment(cur())
+                c.execute(f"""
                     SELECT a.module_name, s.status_name, a.reviewed_by,
-                           a.review_comment, a.created_at
+                           a.created_at{rc_col}
                     FROM   appeals a
                     JOIN   appeal_status s ON a.status_id = s.id
                     WHERE  a.student_id=%s
