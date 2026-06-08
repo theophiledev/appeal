@@ -1,0 +1,31 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+actor Student
+actor Administrator
+actor "Head of
+Department" as HOD
+rectangle "USSD-Based Marks Appeal System" {
+  :Student: --> (UC1 Register PIN)
+  :Student: --> (UC2 Authenticate via PIN)
+  :Student: --> (UC3 Reset PIN via OTP)
+  :Student: --> (UC4 View Marks)
+  :Student: --> (UC5 Submit Marks Appeal)
+  :Student: --> (UC6 Check Appeal Status)
+
+  :Administrator: --> (UC7 Login)
+  :Administrator: --> (UC8 View All Appeals)
+  :Administrator: --> (UC9 Update Appeal Status)
+  :Administrator: --> (UC10 View Audit Logs)
+  :Administrator: --> (UC11 Logout)
+
+  :HOD: --> (UC12 Login)
+  :HOD: --> (UC13 View Departmental Appeals)
+  :HOD: --> (UC14 Submit Recommendation)
+
+  (UC4) .> (UC2) : <<include>>
+  (UC5) .> (UC2) : <<include>>
+  (UC6) .> (UC2) : <<include>>
+  (UC3) .> (UC2) : <<extend>>
+}
+@enduml

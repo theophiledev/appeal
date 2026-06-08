@@ -1,0 +1,80 @@
+digraph "DFDLevel1" {
+  rankdir=TB;
+  bgcolor="transparent";
+  fontname="Arial";
+  node [fontname="Arial"];
+  edge [fontname="Arial"];
+
+  // External entities
+  node [shape=box, style="rounded,filled", fillcolor="#E3F2FD", color="#1565C0"];
+  Student [label="Student"];
+  Admin [label="Administrator"];
+  HOD [label="HOD"];
+
+  // Processes
+  node [shape=circle, style=filled, fillcolor="#FFF3E0", color="#E65100", width=1.5];
+  P1 [label="1.0
+Authenticate
+Student"];
+  P2 [label="2.0
+View
+Marks"];
+  P3 [label="3.0
+Submit
+Appeal"];
+  P4 [label="4.0
+Check
+Appeal Status"];
+  P5 [label="5.0
+Manage
+Appeals"];
+
+  // Data stores
+  node [shape=cylinder, style=filled, fillcolor="#E8F5E9", color="#2E7D32", width=1.2];
+  DS1 [label="pin_credentials"];
+  DS2 [label="marks"];
+  DS3 [label="appeals"];
+  DS4 [label="appeal_status"];
+  DS5 [label="access_audit"];
+  DS6 [label="admins"];
+
+  // Central hub for routing
+  node [shape=point, width=0, height=0];
+  hub;
+
+  // Student flows
+  edge [color="#1565C0"];
+  Student -> hub;
+  hub -> P1;
+  P1 -> DS1 [label=" read/write"];
+  P1 -> DS5 [label=" write"];
+
+  P1 -> P2 [label=" auth OK"];
+  P2 -> DS2 [label=" read"];
+  P2 -> hub; hub -> Student;
+
+  P1 -> P3 [label=" auth OK"];
+  P3 -> DS2 [label=" read"];
+  P3 -> DS3 [label=" write"];
+  P3 -> DS5 [label=" write"];
+  P3 -> hub; hub -> Student;
+
+  P1 -> P4 [label=" auth OK"];
+  P4 -> DS3 [label=" read"];
+  P4 -> DS4 [label=" read"];
+  P4 -> hub; hub -> Student;
+
+  // Admin flows
+  edge [color="#2E7D32"];
+  Admin -> P5;
+  P5 -> DS3 [label=" read/write"];
+  P5 -> DS4 [label=" read"];
+  P5 -> DS6 [label=" read"];
+  P5 -> DS5 [label=" read"];
+  P5 -> Admin;
+
+  // HOD flows
+  edge [color="#E65100"];
+  HOD -> P5;
+  P5 -> HOD;
+}"

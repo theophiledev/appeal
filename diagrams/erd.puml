@@ -1,0 +1,73 @@
+@startuml
+!define table(x) class x << (T,#FFE0E0) >>
+!define primary_key(x) <u>x</u>
+!define foreign_key(x) <i><color:blue>x</color></i>
+
+hide circle
+skinparam linetype ortho
+
+table(students) {
+  + <u>student_id</u> VARCHAR(20)
+  + full_name VARCHAR(100)
+  + phone_number VARCHAR(15)
+  + department VARCHAR(100)
+  + email VARCHAR(100)
+}
+
+table(admins) {
+  + <u>id</u> INT
+  + username VARCHAR(50)
+  + password VARCHAR(255)
+}
+
+table(marks) {
+  + <u>id</u> INT
+  + foreign_key(student_id) VARCHAR(20)
+  + module_name VARCHAR(100)
+  + mark INT
+  + academic_year VARCHAR(20)
+  + semester VARCHAR(20)
+}
+
+table(appeal_status) {
+  + <u>id</u> INT
+  + status_name VARCHAR(50)
+}
+
+table(appeals) {
+  + <u>id</u> INT
+  + foreign_key(student_id) VARCHAR(20)
+  + module_name VARCHAR(100)
+  + reason TEXT
+  + foreign_key(status_id) INT
+  + submitted_at TIMESTAMP
+  + resolved_at TIMESTAMP
+  + hod_recommendation TEXT
+}
+
+table(pin_credentials) {
+  + <u>id</u> INT
+  + foreign_key(student_id) VARCHAR(20)
+  + pin_hash VARCHAR(64)
+  + failed_attempts INT
+  + is_locked TINYINT
+  + otp_code VARCHAR(10)
+  + otp_expiry DATETIME
+}
+
+table(access_audit) {
+  + <u>id</u> INT
+  + foreign_key(student_id) VARCHAR(20)
+  + phone_number VARCHAR(15)
+  + action VARCHAR(100)
+  + success TINYINT
+  + session_id VARCHAR(100)
+  + timestamp TIMESTAMP
+}
+
+students ||--o{ marks : "has"
+students ||--o{ appeals : "submits"
+students ||--|| pin_credentials : "has"
+students ||--o{ access_audit : "generates"
+appeal_status ||--o{ appeals : "classifies"
+@enduml

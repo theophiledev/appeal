@@ -1,0 +1,28 @@
+@startuml
+actor Admin
+participant "Web Browser" as Browser
+participant "Flask Web
+Server" as Flask
+database "MySQL
+Database" as DB
+
+Admin -> Browser: Navigate to /admin/login
+Browser -> Flask: GET /admin/login
+Flask --> Browser: Login page
+Browser --> Admin: Display login form
+
+Admin -> Browser: Enter credentials
+Browser -> Flask: POST /admin/login
+Flask -> DB: Query admins table
+DB --> Flask: Admin record
+Flask ->> Browser: Set session cookie
+Flask --> Browser: Redirect to /admin/dashboard
+Browser --> Admin: Dashboard loaded
+
+Admin -> Browser: Click "Update Status"
+Browser -> Flask: POST /admin/manage_appeal/5
+Flask -> DB: UPDATE appeals SET status_id=2
+DB --> Flask: Row updated
+Flask --> Browser: Redirect with flash
+Browser --> Admin: "Appeal status updated"
+@enduml

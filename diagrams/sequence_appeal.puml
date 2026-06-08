@@ -1,0 +1,61 @@
+@startuml
+actor Student
+participant "Mobile Phone" as Phone
+participant "Africa's Talking
+USSD Gateway" as AT
+participant "Flask /ussd
+Endpoint" as Flask
+database "MySQL
+Database" as DB
+
+Student -> Phone: Dial *123#
+Phone -> AT: USSD request
+AT -> Flask: POST /ussd (text="")
+Flask --> AT: CON Welcome menu
+AT --> Phone: Display menu
+Phone --> Student: "1. View marks
+2. Appeal..."
+
+Student -> Phone: Select "2"
+Phone -> AT: text="2"
+AT -> Flask: POST /ussd (text="2")
+Flask --> AT: CON Enter Student ID
+AT --> Phone: Display prompt
+Phone --> Student: "Enter Student ID:"
+
+Student -> Phone: Enter Student ID
+Phone -> AT: text="2*STU001"
+AT -> Flask: POST /ussd (text="2*STU001")
+Flask --> AT: CON Enter your PIN
+AT --> Phone: Display prompt
+Phone --> Student: "Enter your PIN:"
+
+Student -> Phone: Enter PIN
+Phone -> AT: text="2*STU001*1234"
+AT -> Flask: POST /ussd (text="2*STU001*1234")
+Flask -> DB: Query pin_credentials
+DB --> Flask: Record found
+Flask -> DB: Update failed_attempts=0
+Flask -> DB: Query marks for student
+DB --> Flask: Module list
+Flask --> AT: CON Select module
+AT --> Phone: Module list
+Phone --> Student: "1. DBMS (A)
+2. SE (B+)..."
+
+Student -> Phone: Select "1"
+Phone -> AT: text="2*STU001*1234*1"
+AT -> Flask: POST /ussd (text="2*STU001*1234*1")
+Flask --> AT: CON Enter reason
+AT --> Phone: Display prompt
+
+Student -> Phone: Type reason
+Phone -> AT: text="2*STU001*1234*1*Marking error"
+AT -> Flask: POST /ussd (text="2*STU001*1234*1*Marking error")
+Flask -> DB: INSERT INTO appeals
+Flask -> DB: INSERT INTO access_audit
+Flask --> AT: END Appeal submitted
+AT --> Phone: Display confirmation
+Phone --> Student: "Appeal submitted
+We will review it."
+@enduml

@@ -1,0 +1,59 @@
+digraph "ContextDiagram" {
+  rankdir=LR;
+  bgcolor="transparent";
+  fontname="Arial";
+  node [fontname="Arial"];
+  edge [fontname="Arial"];
+
+  // External entities
+  node [shape=box, style="rounded,filled", fillcolor="#E3F2FD", color="#1565C0"];
+  Student [label="Student
+(Mobile Phone / USSD)"];
+  Admin  [label="Administrator
+(Web Portal)"];
+  HOD    [label="Head of Department
+(Web Portal)"];
+
+  // Central system
+  node [shape=circle, style=filled, fillcolor="#FFF3E0", color="#E65100", width=1.8, height=1.8];
+  System [label="USSD-Based
+Marks Appeal
+System"];
+
+  // External gateway
+  node [shape=box3d, style=filled, fillcolor="#F3E5F5", color="#7B1FA2"];
+  AT [label="Africa's Talking
+USSD Gateway"];
+
+  // Data flows — Student
+  edge [color="#1565C0", penwidth=1.2];
+  Student -> AT [label="  USSD Input
+  (Student ID, PIN,
+  menu selection,
+  appeal reason)"];
+  AT -> Student [label="  USSD Response
+  (menus, marks,
+  status, prompts)"];
+
+  AT -> System [label="  HTTP POST
+  (sessionId,
+  phoneNumber,
+  text)"];
+  System -> AT [label="  HTTP Response
+  (CON / END)"];
+
+  // Data flows — Admin
+  edge [color="#2E7D32", penwidth=1.2];
+  Admin -> System [label="  Login Credentials,
+  Status Updates"];
+  System -> Admin [label="  Dashboard View,
+  Appeals List,
+  Audit Logs"];
+
+  // Data flows — HOD
+  edge [color="#E65100", penwidth=1.2];
+  HOD -> System [label="  Login Credentials,
+  Recommendations"];
+  System -> HOD [label="  Departmental
+  Appeals List"];
+}"

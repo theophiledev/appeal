@@ -1,0 +1,53 @@
+digraph "DFDLevel2_Authenticate" {
+  rankdir=TB;
+  bgcolor="transparent";
+  fontname="Arial";
+  node [fontname="Arial"];
+  edge [fontname="Arial"];
+
+  // External
+  node [shape=box, style="rounded,filled", fillcolor="#E3F2FD", color="#1565C0"];
+  Student [label="Student"];
+
+  // Sub-processes
+  node [shape=circle, style=filled, fillcolor="#FFF3E0", color="#E65100", width=1.4];
+  SP1 [label="1.1
+Receive
+Student ID"];
+  SP2 [label="1.2
+Receive
+PIN"];
+  SP3 [label="1.3
+Hash
+PIN"];
+  SP4 [label="1.4
+Compare
+Hash vs DB"];
+  SP5 [label="1.5
+Enforce
+Lockout"];
+  SP6 [label="1.6
+Log
+Event"];
+
+  // Data stores
+  node [shape=cylinder, style=filled, fillcolor="#E8F5E9", color="#2E7D32"];
+  DS_PIN [label="pin_credentials"];
+  DS_AUDIT [label="access_audit"];
+
+  // Flows
+  edge [color="#1565C0"];
+  Student -> SP1 [label=" student_id"];
+  SP1 -> SP2 [label=" step 1 done"];
+  Student -> SP2 [label=" PIN"];
+  SP2 -> SP3 [label=" PIN plaintext"];
+  SP3 -> SP4 [label=" SHA-256 hash"];
+  SP4 -> DS_PIN [label=" fetch record"];
+  DS_PIN -> SP4 [label=" stored hash"];
+
+  SP4 -> SP5 [label=" match result"];
+  SP5 -> DS_PIN [label=" update attempts"];
+  SP5 -> SP6 [label=" auth outcome"];
+  SP6 -> DS_AUDIT [label=" write log"];
+  SP6 -> Student [label=" result prompt"];
+}"
