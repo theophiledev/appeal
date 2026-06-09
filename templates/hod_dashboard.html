@@ -145,21 +145,33 @@
                 <span class="badge badge-green">Approved</span>
                 {% elif appeal.status == 'Rejected' %}
                 <span class="badge badge-red">Rejected</span>
+                {% if appeal.review_comment %}
+                <div class="text-xs text-red-400/80 mt-1 max-w-32 leading-tight" title="{{ appeal.review_comment }}">
+                  {{ appeal.review_comment }}
+                </div>
+                {% endif %}
                 {% else %}
                 <span class="badge badge-amber">Pending</span>
                 {% endif %}
               </td>
               <td>
-                <form method="POST" action="/hod/manage_appeal/{{ appeal.id }}" class="flex gap-2">
-                  <select name="status" class="input-field text-xs py-1.5 px-2">
-                    <option value="Pending" {% if appeal.status=='Pending' %}selected{% endif %}>Pending</option>
-                    <option value="Approved" {% if appeal.status=='Approved' %}selected{% endif %}>Approved</option>
-                    <option value="Rejected" {% if appeal.status=='Rejected' %}selected{% endif %}>Rejected</option>
-                  </select>
-                  <button type="submit"
-                    class="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-gray-900 text-xs font-semibold rounded-lg transition-colors">
-                    Save
-                  </button>
+                <form method="POST" action="/hod/manage_appeal/{{ appeal.id }}" class="flex flex-col gap-2">
+                  <div class="flex gap-2">
+                    <select name="status" class="input-field text-xs py-1.5 px-2"
+                            onchange="document.getElementById('reason-{{ appeal.id }}').style.display = this.value === 'Rejected' ? 'block' : 'none'">
+                      <option value="Pending" {% if appeal.status=='Pending' %}selected{% endif %}>Pending</option>
+                      <option value="Approved" {% if appeal.status=='Approved' %}selected{% endif %}>Approved</option>
+                      <option value="Rejected" {% if appeal.status=='Rejected' %}selected{% endif %}>Rejected</option>
+                    </select>
+                    <button type="submit"
+                      class="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-gray-900 text-xs font-semibold rounded-lg transition-colors">
+                      Save
+                    </button>
+                  </div>
+                  <textarea name="review_comment" id="reason-{{ appeal.id }}" rows="2"
+                    placeholder="Reason for rejection..."
+                    class="input-field text-xs py-1.5 px-2"
+                    style="display:{{ 'block' if appeal.status == 'Rejected' else 'none' }}">{{ appeal.review_comment or '' }}</textarea>
                 </form>
               </td>
             </tr>
