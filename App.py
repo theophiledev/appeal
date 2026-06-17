@@ -680,7 +680,11 @@ def ussd():
                 st = c.fetchone()
                 if not st:
                     return _ussd("END Student ID not found in our system.")
-                otp = send_otp(st['phone'])
+                existing = _otp_store.get(st['phone'])
+                if existing and existing['expires'] > datetime.now():
+                    otp = existing['otp']
+                else:
+                    otp = send_otp(st['phone'])
                 is_sim = phone_number.startswith('250') and request.form.get('sessionId','').startswith('sim-')
                 msg = "CON An OTP has been sent to your registered mobile number.\nPlease enter the OTP:"
                 if is_sim:
