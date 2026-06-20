@@ -666,6 +666,43 @@ def ussd():
                 return _ussd(body.strip())
 
         # ════════════════════════════════════════════════════════════════════
+        # 5. MY PROFILE  (Student: view registered info)
+        #    Flow: 5 -> student_id -> pin -> show profile
+        # ════════════════════════════════════════════════════════════════════
+        if steps[0] == '5':
+            if len(steps) == 1:
+                return _ussd("CON Enter your Student ID:\n0. Back to menu")
+            if len(steps) == 2:
+                if steps[1] == '0':
+                    return _ussd(_main_menu())
+                return _ussd("CON Enter your PIN:")
+            if len(steps) == 3:
+                student_id = steps[1]
+                pin = steps[2]
+                auth = authenticate_student(mysql, student_id, pin, phone_number)
+                if auth != 'OK':
+                    return _ussd(f"END {auth}")
+                c = cur()
+                c.execute(
+                    "SELECT student_id, name, phone FROM students WHERE student_id=%s",
+                    (student_id,)
+                )
+                s = c.fetchone()
+                if not s:
+                    return _ussd("END Student not found.")
+                return _ussd(
+                    f"CON Student Profile:\n"
+                    f"ID: {s['student_id']}\n"
+                    f"Name: {s['name']}\n"
+                    f"Phone: {s['phone']}\n\n"
+                    f"0. Main menu"
+                )
+
+            if len(steps) == 4:
+                if steps[3] == '0':
+                    return _ussd(_main_menu())
+
+        # ════════════════════════════════════════════════════════════════════
         # 4. RESET PIN  (Student: login/logout — recover access)
         #    Flow: 4 -> student_id -> OTP -> new_pin -> confirm_pin
         # ════════════════════════════════════════════════════════════════════

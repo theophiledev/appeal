@@ -30,6 +30,7 @@ def _main_menu() -> str:
         "2. Submit an appeal\n"
         "3. Check appeal status\n"
         "4. Reset my PIN\n"
+        "5. My profile\n"
         "0. Exit"
     )
 
