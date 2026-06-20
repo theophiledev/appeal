@@ -727,28 +727,6 @@ def ussd():
 
 #editing and adding 5=================================================
 #=====================================================================
-if steps[0] == '5':
-            if len(steps) == 1:
-              return _ussd("CON Please enter your Student ID:\n0. Back to menu")
-              if len(steps) == 2:
-                if steps[1] == '0':
-                  return _ussd(_main_menu())
-                  return _ussd("CON Kindly enter your 4-digit PIN:\n0. Back")
-                  if len(steps) == 5:
-                    if steps[2] == '0':
-                      return _ussd("CON Please enter your Student ID:\n0. Back to menu")
-                      student_id = steps[1]
-                      auth = authenticate_student(mysql, student_id, steps[2], phone_number)
-                      if auth != 'OK':
-                        return _ussd(f"END {auth}")
-                        return _ussd("this services will coming soon.")
-                        body = "END Your recent appeal requests:\n\n"
-                        for r in rows:
-                          reviewed = f" (reviewed by {r['reviewed_by']})" if r['reviewed_by'] else ''
-                          comment = f"\n   Comment: {r['review_comment']}" if r['review_comment'] else ''
-                          body += f"{r['module_name']}: {r['status_name']}{reviewed}{comment}\n"
-                          return _ussd(body.strip())
-
 # =============================================================================
 # USSD SIMULATOR (browser-based testing)
 # =============================================================================
