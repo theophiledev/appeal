@@ -74,6 +74,27 @@ def cur(dict_cursor=True):
     return mysql.connection.cursor()
 
 
+def mark_to_grade(mark: str) -> str:
+    """Convert numeric mark to letter grade. Returns original if not numeric."""
+    try:
+        m = float(mark)
+    except (ValueError, TypeError):
+        return mark
+    if m >= 80:
+        return 'A'
+    if m >= 70:
+        return 'B+'
+    if m >= 60:
+        return 'B'
+    if m >= 55:
+        return 'C+'
+    if m >= 50:
+        return 'C'
+    if m >= 40:
+        return 'D'
+    return 'F'
+
+
 def _has_review_comment(c) -> str:
     """Check if review_comment column exists; return SQL fragment."""
     c.execute("""
@@ -638,7 +659,12 @@ def ussd():
                 rows = c.fetchall()
                 if not rows:
                     return _ussd("END No results found for your Student ID.")
-                body = "\n".join(f"{r['module_name']}: {r['mark']}" for r in rows)
+                body = "\n".join(
+                    (f"{r['module_name']}: {r['mark']} ({mark_to_grade(r['mark'])})"
+                     if mark_to_grade(r['mark']) != r['mark']
+                     else f"{r['module_name']}: {r['mark']}")
+                    for r in rows
+                )
                 return _ussd(f"END Here are your results, {student_name}:\n{body}")
 
         # ════════════════════════════════════════════════════════════════════

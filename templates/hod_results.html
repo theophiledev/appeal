@@ -133,12 +133,20 @@
               <td>
                 {% set mark_num = r.mark|int(-1) %}
                 {% if mark_num >= 0 %}
-                  {% if mark_num >= 50 %}
-                  <span class="badge badge-green">{{ r.mark }}</span>
+                  {% if mark_num >= 80 %}
+                  <span class="badge badge-green">{{ r.mark }} (A)</span>
+                  {% elif mark_num >= 70 %}
+                  <span class="badge badge-teal">{{ r.mark }} (B+)</span>
+                  {% elif mark_num >= 60 %}
+                  <span class="badge badge-teal">{{ r.mark }} (B)</span>
+                  {% elif mark_num >= 55 %}
+                  <span class="badge badge-amber">{{ r.mark }} (C+)</span>
+                  {% elif mark_num >= 50 %}
+                  <span class="badge badge-amber">{{ r.mark }} (C)</span>
                   {% elif mark_num >= 40 %}
-                  <span class="badge badge-amber">{{ r.mark }}</span>
+                  <span class="badge badge-orange" style="background:rgba(244,162,97,0.15);color:#f4a261;border:1px solid rgba(244,162,97,0.3)">{{ r.mark }} (D)</span>
                   {% else %}
-                  <span class="badge badge-red">{{ r.mark }}</span>
+                  <span class="badge badge-red">{{ r.mark }} (F)</span>
                   {% endif %}
                 {% else %}
                   {% set first = r.mark|upper|first %}
