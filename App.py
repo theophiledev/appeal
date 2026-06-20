@@ -236,6 +236,9 @@ def admin_login():
 @admin_required
 def admin_dashboard():
     c = cur()
+    page = int(request.args.get('page', 1))
+    per_page = 10
+
     # System-wide stats
     c.execute("SELECT COUNT(*) AS cnt FROM students")
     total_students = c.fetchone()['cnt']
@@ -250,25 +253,40 @@ def admin_dashboard():
     """)
     status_counts = {r['status_name']: r['cnt'] for r in c.fetchall()}
 
-    # All admin accounts
+    # Admin accounts
     c.execute("SELECT id, username, role, created_at FROM admins ORDER BY id")
     accounts = c.fetchall()
 
-    # Recent audit log
+    # Paginated audit log
+    c.execute("SELECT COUNT(*) AS cnt FROM access_audit")
+    audit_total = c.fetchone()['cnt']
     c.execute("""
         SELECT student_id, phone, action, success, timestamp
         FROM   access_audit
-        ORDER  BY id DESC LIMIT 20
-    """)
+        ORDER  BY id DESC LIMIT %s OFFSET %s
+    """, (per_page, (page - 1) * per_page))
     audit_log = c.fetchall()
 
-    # All students
-    c.execute("SELECT student_id, name, phone FROM students ORDER BY name")
+    # Paginated students
+    c.execute("SELECT COUNT(*) AS cnt FROM students")
+    student_total = c.fetchone()['cnt']
+    c.execute("SELECT student_id, name, phone FROM students ORDER BY name LIMIT %s OFFSET %s",
+              (per_page, (page - 1) * per_page))
     all_students = c.fetchall()
 
     # All modules (distinct from marks)
     c.execute("SELECT DISTINCT module_name FROM marks ORDER BY module_name")
     all_modules = [r['module_name'] for r in c.fetchall()]
+
+    # All marks for grade display
+    c.execute("""
+        SELECT m.id, m.student_id, s.name, m.module_name, m.mark,
+               m.updated_by, m.updated_at
+        FROM   marks m
+        JOIN   students s ON m.student_id = s.student_id
+        ORDER  BY m.student_id, m.module_name
+    """)
+    all_marks = c.fetchall()
 
     # Recent appeals
     rc_col = _has_review_comment(cur())
@@ -278,12 +296,16 @@ def admin_dashboard():
         FROM   appeals a
         JOIN   students s      ON a.student_id = s.student_id
         JOIN   appeal_status st ON a.status_id = st.id
-        ORDER  BY a.id DESC LIMIT 10
-    """)
+        ORDER  BY a.id DESC LIMIT %s OFFSET %s
+    """, (per_page, (page - 1) * per_page))
     recent_appeals = c.fetchall()
 
-    # Search query
+    c.execute("SELECT COUNT(*) AS cnt FROM appeals")
+    appeal_total = c.fetchone()['cnt']
+
+    tab = request.args.get('tab', 'overview')
     search = request.args.get('q', '').strip()
+    pages = lambda total: max(1, (total + per_page - 1) // per_page)
 
     return render_template('admin_dashboard.html',
                            total_students=total_students,
@@ -294,7 +316,15 @@ def admin_dashboard():
                            recent_appeals=recent_appeals,
                            students=all_students,
                            modules=all_modules,
-                           search=search)
+                           all_marks=all_marks,
+                           search=search,
+                           tab=tab, page=page, per_page=per_page,
+                           student_total=student_total,
+                           audit_total=audit_total,
+                           appeal_total=appeal_total,
+                           student_pages=pages(student_total),
+                           appeal_pages=pages(appeal_total),
+                           audit_pages=pages(audit_total))
 
 
 @app.route('/admin/manage_accounts', methods=['GET', 'POST'])
@@ -477,6 +507,12 @@ def hod_login():
 @hod_required
 def hod_dashboard():
     c = cur()
+    page = int(request.args.get('page', 1))
+    per_page = 10
+
+    c.execute("SELECT COUNT(*) AS cnt FROM appeals")
+    total_appeals = c.fetchone()['cnt']
+
     rc_col = _has_review_comment(cur())
     c.execute(f"""
         SELECT a.id, a.student_id, st.name AS student_name,
@@ -486,7 +522,8 @@ def hod_dashboard():
         JOIN   appeal_status s ON a.status_id = s.id
         JOIN   students st     ON a.student_id = st.student_id
         ORDER  BY a.id DESC
-    """)
+        LIMIT %s OFFSET %s
+    """, (per_page, (page - 1) * per_page))
     appeals = c.fetchall()
 
     c.execute("""
@@ -497,8 +534,10 @@ def hod_dashboard():
     counts = {r['status_name']: r['cnt'] for r in c.fetchall()}
 
     search = request.args.get('q', '').strip()
+    total_pages = max(1, (total_appeals + per_page - 1) // per_page)
 
-    return render_template('hod_dashboard.html', appeals=appeals, counts=counts, search=search)
+    return render_template('hod_dashboard.html', appeals=appeals, counts=counts,
+                           search=search, page=page, total_pages=total_pages)
 
 
 @app.route('/hod/manage_appeal/<int:appeal_id>', methods=['POST'])
@@ -568,14 +607,22 @@ def hod_manage_results():
             mysql.connection.commit()
             flash('✅ Mark added.', 'success')
 
-    # Fetch all student results
+    page = int(request.args.get('page', 1))
+    per_page = 10
+
+    # Count total marks
+    c.execute("SELECT COUNT(*) AS cnt FROM marks")
+    total_marks = c.fetchone()['cnt']
+
+    # Paginated student results
     c.execute("""
         SELECT m.id, m.student_id, s.name, m.module_name, m.mark,
                m.updated_by, m.updated_at
         FROM   marks m
         JOIN   students s ON m.student_id = s.student_id
         ORDER  BY m.student_id, m.module_name
-    """)
+        LIMIT %s OFFSET %s
+    """, (per_page, (page - 1) * per_page))
     results = c.fetchall()
 
     c.execute("SELECT student_id, name FROM students ORDER BY name")
@@ -585,8 +632,11 @@ def hod_manage_results():
     modules = [r['module_name'] for r in c.fetchall()]
 
     search = request.args.get('q', '').strip()
+    total_pages = max(1, (total_marks + per_page - 1) // per_page)
 
-    return render_template('hod_results.html', results=results, students=students, modules=modules, search=search)
+    return render_template('hod_results.html', results=results, students=students,
+                           modules=modules, search=search,
+                           page=page, total_pages=total_pages, total_marks=total_marks)
 
 
 # =============================================================================

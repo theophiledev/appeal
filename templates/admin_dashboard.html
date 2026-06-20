@@ -114,16 +114,112 @@
       </div>
     </div>
 
-    <!-- Manage Students Section -->
-    <div class="mb-8">
-      <div class="flex items-center justify-between mb-6">
-        <h2 class="text-lg font-semibold text-cyan-400 flex items-center gap-2">
-          <i data-lucide="users" class="w-5 h-5"></i>
-          Manage Students
-        </h2>
-      </div>
+    <!-- Tab Navigation -->
+    <div class="tab-nav">
+      <a href="?tab=overview" class="{{ 'active' if tab == 'overview' else '' }}">Overview</a>
+      <a href="?tab=students" class="{{ 'active' if tab == 'students' else '' }}">Students</a>
+      <a href="?tab=modules" class="{{ 'active' if tab == 'modules' else '' }}">Modules</a>
+      <a href="?tab=accounts" class="{{ 'active' if tab == 'accounts' else '' }}">Accounts</a>
+      <a href="?tab=appeals" class="{{ 'active' if tab == 'appeals' else '' }}">Appeals</a>
+      <a href="?tab=audit" class="{{ 'active' if tab == 'audit' else '' }}">Audit</a>
+      <a href="?tab=marks" class="{{ 'active' if tab == 'marks' else '' }}">Marks</a>
+    </div>
 
-      <!-- Add Student Form -->
+    {% if tab == 'overview' %}
+    <!-- OVERVIEW TAB -->
+    <div class="animate-fade-in">
+      <div class="mb-8">
+        <h2 class="text-lg font-semibold text-cyan-400 flex items-center gap-2 mb-4">
+          <i data-lucide="activity" class="w-5 h-5"></i>
+          Quick Actions
+        </h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <a href="?tab=students" class="stat-card flex items-center gap-4 hover:border-cyan-500/30">
+            <div class="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center">
+              <i data-lucide="user-plus" class="w-6 h-6 text-cyan-400"></i>
+            </div>
+            <div>
+              <div class="text-sm font-semibold text-white">Add Student</div>
+              <div class="text-xs text-gray-400">Register new student</div>
+            </div>
+          </a>
+          <a href="?tab=modules" class="stat-card flex items-center gap-4 hover:border-cyan-500/30">
+            <div class="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center">
+              <i data-lucide="book-plus" class="w-6 h-6 text-cyan-400"></i>
+            </div>
+            <div>
+              <div class="text-sm font-semibold text-white">Add Module</div>
+              <div class="text-xs text-gray-400">Create new module</div>
+            </div>
+          </a>
+          <a href="/admin/system_maintenance" class="stat-card flex items-center gap-4 hover:border-cyan-500/30">
+            <div class="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center">
+              <i data-lucide="unlock" class="w-6 h-6 text-cyan-400"></i>
+            </div>
+            <div>
+              <div class="text-sm font-semibold text-white">Maintenance</div>
+              <div class="text-xs text-gray-400">Unlock students</div>
+            </div>
+          </a>
+          <a href="?tab=audit" class="stat-card flex items-center gap-4 hover:border-cyan-500/30">
+            <div class="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center">
+              <i data-lucide="history" class="w-6 h-6 text-cyan-400"></i>
+            </div>
+            <div>
+              <div class="text-sm font-semibold text-white">Audit Log</div>
+              <div class="text-xs text-gray-400">View access history</div>
+            </div>
+          </a>
+        </div>
+      </div>
+      <div>
+        <h2 class="text-lg font-semibold text-cyan-400 flex items-center gap-2 mb-4">
+          <i data-lucide="inbox" class="w-5 h-5"></i>
+          Recent Appeals
+        </h2>
+        <div class="table-container overflow-x-auto">
+          <table class="custom-table min-w-[600px]">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Student</th>
+                <th>Module</th>
+                <th>Status</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for a in recent_appeals %}
+              <tr>
+                <td class="text-gray-400">{{ a.id }}</td>
+                <td class="font-medium text-white">{{ a.name }} <span class="text-gray-500 text-xs">({{ a.student_id }})</span></td>
+                <td class="text-gray-300">{{ a.module_name }}</td>
+                <td>
+                  {% if a.status_name == 'Approved' %}
+                  <span class="badge badge-green">Approved</span>
+                  {% elif a.status_name == 'Rejected' %}
+                  <span class="badge badge-red">Rejected</span>
+                  {% else %}
+                  <span class="badge badge-amber">Pending</span>
+                  {% endif %}
+                </td>
+                <td class="text-gray-400 text-sm">{{ a.created_at }}</td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="5" class="text-center text-gray-500 py-8">No appeals yet.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if tab == 'students' %}
+    <!-- STUDENTS TAB -->
+    <div class="animate-fade-in">
       <div class="glass-card rounded-xl p-4 sm:p-6 mb-6">
         <h3 class="text-sm font-semibold text-gray-300 mb-4 flex items-center gap-2">
           <i data-lucide="user-plus" class="w-4 h-4"></i>
@@ -149,7 +245,6 @@
         </form>
       </div>
 
-      <!-- Students Table -->
       <div class="table-container overflow-x-auto">
         <table class="custom-table min-w-[600px]">
           <thead>
@@ -161,64 +256,62 @@
             </tr>
           </thead>
           <tbody>
-            {% set filtered = students %}
-            {% if search %}
-              {% set filtered = students | selectattr('student_id', 'in', students | map(attribute='student_id') | list) | list %}
-            {% endif %}
             {% for s in students %}
-              {% if not search or search.lower() in s.student_id.lower() or search.lower() in s.name.lower() or search.lower() in s.phone.lower() %}
             <tr>
-              <td>
-                <code class="text-cyan-400 text-xs bg-cyan-500/10 px-2 py-1 rounded">{{ s.student_id }}</code>
-              </td>
+              <td><code class="text-cyan-400 text-xs bg-cyan-500/10 px-2 py-1 rounded">{{ s.student_id }}</code></td>
               <td class="font-medium text-white">{{ s.name }}</td>
               <td class="text-gray-400">{{ s.phone }}</td>
               <td>
                 <div class="flex gap-2 flex-wrap">
-                  <!-- Edit form inline -->
                   <form method="POST" action="/admin/edit_student/{{ s.student_id }}"
-                    class="flex gap-1 items-center flex-wrap"
-                    onsubmit="return confirm('Update {{ s.student_id }}?')">
+                    class="flex gap-1 items-center flex-wrap" onsubmit="return confirm('Update {{ s.student_id }}?')">
                     <input type="text" name="name" value="{{ s.name }}"
                       class="input-field text-xs py-1 px-2 w-24 sm:w-32" required>
                     <input type="text" name="phone" value="{{ s.phone }}"
                       class="input-field text-xs py-1 px-2 w-24 sm:w-28" required>
-                    <button type="submit" class="px-2 py-1 bg-cyan-500 hover:bg-cyan-600 text-gray-900 text-xs font-semibold rounded-lg">
-                      Save
-                    </button>
+                    <button type="submit" class="px-2 py-1 bg-cyan-500 hover:bg-cyan-600 text-gray-900 text-xs font-semibold rounded-lg">Save</button>
                   </form>
                   <form method="POST" action="/admin/delete_student/{{ s.student_id }}">
                     <button type="submit" class="btn-danger text-xs px-2 py-1"
-                      onclick="return confirm('Delete student {{ s.student_id }}?\nThis will remove all their data.')">
+                      onclick="return confirm('Delete {{ s.student_id }}? This removes all their data.')">
                       <i data-lucide="trash-2" class="w-3 h-3"></i>
                     </button>
                   </form>
                 </div>
               </td>
             </tr>
-              {% endif %}
             {% else %}
             <tr>
               <td colspan="4" class="text-center text-gray-500 py-12">
                 <i data-lucide="users" class="w-12 h-12 mx-auto mb-3 text-gray-600"></i>
-                <p>{{ 'No students match your search.' if search else 'No students registered yet.' }}</p>
+                <p>No students registered yet.</p>
               </td>
             </tr>
             {% endfor %}
           </tbody>
         </table>
       </div>
-    </div>
 
-    <!-- Manage Modules Section -->
-    <div class="mb-8">
-      <div class="flex items-center justify-between mb-6">
-        <h2 class="text-lg font-semibold text-cyan-400 flex items-center gap-2">
-          <i data-lucide="book-open" class="w-5 h-5"></i>
-          Manage Modules
-        </h2>
+      <div class="pagination">
+        {% if page > 1 %}
+        <a href="?tab=students&page={{ page - 1 }}">&laquo; Prev</a>
+        {% else %}
+        <span class="disabled">&laquo; Prev</span>
+        {% endif %}
+        <span class="active">{{ page }}</span>
+        {% if page < student_pages %}
+        <a href="?tab=students&page={{ page + 1 }}">Next &raquo;</a>
+        {% else %}
+        <span class="disabled">Next &raquo;</span>
+        {% endif %}
+        <span class="text-xs text-gray-500 ml-2">Page {{ page }} of {{ student_pages }} ({{ student_total }} students)</span>
       </div>
+    </div>
+    {% endif %}
 
+    {% if tab == 'modules' %}
+    <!-- MODULES TAB -->
+    <div class="animate-fade-in">
       <div class="glass-card rounded-xl p-4 sm:p-6 mb-6">
         <form method="POST" action="/admin/add_module" class="flex gap-4 items-end flex-wrap">
           <div class="flex-1 min-w-[200px]">
@@ -234,36 +327,22 @@
 
       <div class="table-container">
         <table class="custom-table">
-          <thead>
-            <tr>
-              <th>Module Name</th>
-            </tr>
-          </thead>
+          <thead><tr><th>Module Name</th></tr></thead>
           <tbody>
             {% for m in modules %}
-            <tr>
-              <td class="text-gray-300">{{ m }}</td>
-            </tr>
+            <tr><td class="text-gray-300">{{ m }}</td></tr>
             {% else %}
-            <tr>
-              <td class="text-center text-gray-500 py-8">No modules yet.</td>
-            </tr>
+            <tr><td class="text-center text-gray-500 py-8">No modules yet.</td></tr>
             {% endfor %}
           </tbody>
         </table>
       </div>
     </div>
+    {% endif %}
 
-    <!-- Manage Accounts Section -->
-    <div class="mb-8">
-      <div class="flex items-center justify-between mb-6">
-        <h2 class="text-lg font-semibold text-cyan-400 flex items-center gap-2">
-          <i data-lucide="user-cog" class="w-5 h-5"></i>
-          Manage Accounts
-        </h2>
-      </div>
-
-      <!-- Create Account Form -->
+    {% if tab == 'accounts' %}
+    <!-- ACCOUNTS TAB -->
+    <div class="animate-fade-in">
       <div class="glass-card rounded-xl p-4 sm:p-6 mb-6">
         <h3 class="text-sm font-semibold text-gray-300 mb-4 flex items-center gap-2">
           <i data-lucide="user-plus" class="w-4 h-4"></i>
@@ -293,17 +372,10 @@
         </form>
       </div>
 
-      <!-- Accounts Table -->
       <div class="table-container overflow-x-auto">
         <table class="custom-table min-w-[400px]">
           <thead>
-            <tr>
-              <th>ID</th>
-              <th>Username</th>
-              <th>Role</th>
-              <th>Created</th>
-              <th>Action</th>
-            </tr>
+            <tr><th>ID</th><th>Username</th><th>Role</th><th>Created</th><th>Action</th></tr>
           </thead>
           <tbody>
             {% for acc in accounts %}
@@ -313,9 +385,7 @@
               <td>
                 {% if acc.role == 'admin' %}
                 <span class="badge badge-teal">ADMIN</span>
-                {% else %}
-                <span class="badge badge-amber">HOD</span>
-                {% endif %}
+                {% else %}<span class="badge badge-amber">HOD</span>{% endif %}
               </td>
               <td class="text-gray-400 text-sm">{{ acc.created_at }}</td>
               <td>
@@ -325,13 +395,10 @@
                   <input type="hidden" name="account_id" value="{{ acc.id }}">
                   <button type="submit" class="btn-danger text-xs px-3 py-1.5"
                     onclick="return confirm('Remove account {{ acc.username }}?')">
-                    <i data-lucide="trash-2" class="w-3 h-3 inline mr-1"></i>
-                    Remove
+                    <i data-lucide="trash-2" class="w-3 h-3 inline mr-1"></i> Remove
                   </button>
                 </form>
-                {% else %}
-                <span class="text-xs text-gray-500">Current session</span>
-                {% endif %}
+                {% else %}<span class="text-xs text-gray-500">Current session</span>{% endif %}
               </td>
             </tr>
             {% endfor %}
@@ -339,23 +406,19 @@
         </table>
       </div>
     </div>
+    {% endif %}
 
-    <!-- Recent Appeals Section -->
-    <div class="mb-8">
-      <h2 class="text-lg font-semibold text-cyan-400 flex items-center gap-2 mb-6">
+    {% if tab == 'appeals' %}
+    <!-- APPEALS TAB -->
+    <div class="animate-fade-in">
+      <h2 class="text-lg font-semibold text-cyan-400 flex items-center gap-2 mb-4">
         <i data-lucide="inbox" class="w-5 h-5"></i>
         Recent Appeals
       </h2>
       <div class="table-container overflow-x-auto">
         <table class="custom-table min-w-[600px]">
           <thead>
-            <tr>
-              <th>ID</th>
-              <th>Student</th>
-              <th>Module</th>
-              <th>Status</th>
-              <th>Date</th>
-            </tr>
+            <tr><th>ID</th><th>Student</th><th>Module</th><th>Status</th><th>Date</th></tr>
           </thead>
           <tbody>
             {% for a in recent_appeals %}
@@ -368,67 +431,122 @@
                 <span class="badge badge-green">Approved</span>
                 {% elif a.status_name == 'Rejected' %}
                 <span class="badge badge-red">Rejected</span>
-                {% else %}
-                <span class="badge badge-amber">Pending</span>
-                {% endif %}
+                {% else %}<span class="badge badge-amber">Pending</span>{% endif %}
               </td>
               <td class="text-gray-400 text-sm">{{ a.created_at }}</td>
             </tr>
             {% else %}
-            <tr>
-              <td colspan="5" class="text-center text-gray-500 py-8">No appeals yet.</td>
-            </tr>
+            <tr><td colspan="5" class="text-center text-gray-500 py-8">No appeals yet.</td></tr>
             {% endfor %}
           </tbody>
         </table>
       </div>
+      <div class="pagination">
+        {% if page > 1 %}
+        <a href="?tab=appeals&page={{ page - 1 }}">&laquo; Prev</a>
+        {% else %}<span class="disabled">&laquo; Prev</span>{% endif %}
+        <span class="active">{{ page }}</span>
+        {% if page < appeal_pages %}
+        <a href="?tab=appeals&page={{ page + 1 }}">Next &raquo;</a>
+        {% else %}<span class="disabled">Next &raquo;</span>{% endif %}
+        <span class="text-xs text-gray-500 ml-2">Page {{ page }} of {{ appeal_pages }}</span>
+      </div>
     </div>
+    {% endif %}
 
-    <!-- Audit Log Section -->
-    <div>
-      <h2 class="text-lg font-semibold text-cyan-400 flex items-center gap-2 mb-6">
+    {% if tab == 'audit' %}
+    <!-- AUDIT TAB -->
+    <div class="animate-fade-in">
+      <h2 class="text-lg font-semibold text-cyan-400 flex items-center gap-2 mb-4">
         <i data-lucide="history" class="w-5 h-5"></i>
-        Recent Access Audit Log
+        Access Audit Log
       </h2>
       <div class="table-container overflow-x-auto">
         <table class="custom-table min-w-[500px]">
           <thead>
-            <tr>
-              <th>Student ID</th>
-              <th>Phone</th>
-              <th>Action</th>
-              <th>Result</th>
-              <th>Timestamp</th>
-            </tr>
+            <tr><th>Student ID</th><th>Phone</th><th>Action</th><th>Result</th><th>Timestamp</th></tr>
           </thead>
           <tbody>
             {% for log in audit_log %}
             <tr>
               <td class="text-gray-400">{{ log.student_id }}</td>
               <td class="text-gray-400">{{ log.phone }}</td>
-              <td>
-                <code class="text-cyan-400 text-xs bg-cyan-500/10 px-2 py-1 rounded">{{ log.action }}</code>
-              </td>
+              <td><code class="text-cyan-400 text-xs bg-cyan-500/10 px-2 py-1 rounded">{{ log.action }}</code></td>
               <td>
                 {% if log.success %}
-                <span class="flex items-center gap-2 text-green-400 text-sm">
-                  <span class="w-2 h-2 rounded-full bg-green-400"></span>
-                  Success
-                </span>
+                <span class="flex items-center gap-2 text-green-400 text-sm"><span class="w-2 h-2 rounded-full bg-green-400"></span>Success</span>
                 {% else %}
-                <span class="flex items-center gap-2 text-red-400 text-sm">
-                  <span class="w-2 h-2 rounded-full bg-red-400"></span>
-                  Failed
-                </span>
+                <span class="flex items-center gap-2 text-red-400 text-sm"><span class="w-2 h-2 rounded-full bg-red-400"></span>Failed</span>
                 {% endif %}
               </td>
               <td class="text-gray-400 text-sm">{{ log.timestamp }}</td>
             </tr>
+            {% else %}
+            <tr><td colspan="5" class="text-center text-gray-500 py-8">No audit entries.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination">
+        {% if page > 1 %}
+        <a href="?tab=audit&page={{ page - 1 }}">&laquo; Prev</a>
+        {% else %}<span class="disabled">&laquo; Prev</span>{% endif %}
+        <span class="active">{{ page }}</span>
+        {% if page < audit_pages %}
+        <a href="?tab=audit&page={{ page + 1 }}">Next &raquo;</a>
+        {% else %}<span class="disabled">Next &raquo;</span>{% endif %}
+        <span class="text-xs text-gray-500 ml-2">Page {{ page }} of {{ audit_pages }}</span>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if tab == 'marks' %}
+    <!-- MARKS TAB -->
+    <div class="animate-fade-in">
+      <h2 class="text-lg font-semibold text-cyan-400 flex items-center gap-2 mb-4">
+        <i data-lucide="file-text" class="w-5 h-5"></i>
+        All Student Marks
+      </h2>
+      <div class="table-container overflow-x-auto">
+        <table class="custom-table min-w-[700px]">
+          <thead>
+            <tr><th>#</th><th>Student ID</th><th>Name</th><th>Module</th><th>Mark</th><th>Grade</th></tr>
+          </thead>
+          <tbody>
+            {% for r in all_marks %}
+            <tr>
+              <td class="text-gray-400">{{ r.id }}</td>
+              <td><code class="text-cyan-400 text-xs bg-cyan-500/10 px-2 py-1 rounded">{{ r.student_id }}</code></td>
+              <td class="font-medium text-white">{{ r.name }}</td>
+              <td class="text-gray-300">{{ r.module_name }}</td>
+              <td class="text-gray-300">{{ r.mark }}</td>
+              <td>
+                {% set m = r.mark|int(-1) %}
+                {% if m >= 0 %}
+                  {% if m >= 80 %}<span class="badge badge-green">A</span>
+                  {% elif m >= 70 %}<span class="badge badge-teal">B+</span>
+                  {% elif m >= 60 %}<span class="badge badge-teal">B</span>
+                  {% elif m >= 55 %}<span class="badge badge-amber">C+</span>
+                  {% elif m >= 50 %}<span class="badge badge-amber">C</span>
+                  {% elif m >= 40 %}<span class="badge badge-orange" style="background:rgba(244,162,97,0.15);color:#f4a261;border:1px solid rgba(244,162,97,0.3)">D</span>
+                  {% else %}<span class="badge badge-red">F</span>{% endif %}
+                {% else %}
+                  {% set first = r.mark|upper|first %}
+                  {% if first == 'A' %}<span class="badge badge-green">{{ r.mark }}</span>
+                  {% elif first == 'B' %}<span class="badge badge-teal">{{ r.mark }}</span>
+                  {% elif first == 'C' %}<span class="badge badge-amber">{{ r.mark }}</span>
+                  {% else %}<span class="badge badge-red">{{ r.mark }}</span>{% endif %}
+                {% endif %}
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="text-center text-gray-500 py-8">No marks recorded.</td></tr>
             {% endfor %}
           </tbody>
         </table>
       </div>
     </div>
+    {% endif %}
   </div>
 </div>
 {% endblock %}

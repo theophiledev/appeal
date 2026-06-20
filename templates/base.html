@@ -264,6 +264,66 @@
         .scrollbar-thin::-webkit-scrollbar-thumb:hover {
             background: var(--text-muted);
         }
+
+        .pagination {
+            display: flex;
+            gap: 0.25rem;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            flex-wrap: wrap;
+        }
+        .pagination a, .pagination span {
+            padding: 0.4rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .pagination a {
+            color: var(--accent-teal);
+            text-decoration: none;
+            border: 1px solid rgba(0,180,216,0.3);
+        }
+        .pagination a:hover {
+            background: var(--accent-teal);
+            color: var(--bg-primary);
+        }
+        .pagination .active {
+            background: var(--accent-teal);
+            color: var(--bg-primary);
+            border: 1px solid var(--accent-teal);
+        }
+        .pagination .disabled {
+            color: var(--text-muted);
+            border: 1px solid rgba(255,255,255,0.05);
+            cursor: not-allowed;
+        }
+
+        .tab-nav {
+            display: flex;
+            gap: 0.25rem;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: 1.5rem;
+            overflow-x: auto;
+            flex-wrap: nowrap;
+        }
+        .tab-nav a {
+            padding: 0.6rem 1.2rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .tab-nav a:hover {
+            color: var(--text-primary);
+        }
+        .tab-nav a.active {
+            color: var(--accent-teal);
+            border-bottom-color: var(--accent-teal);
+        }
     </style>
 </head>
 <body class="antialiased">

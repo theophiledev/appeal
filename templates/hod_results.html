@@ -102,10 +102,13 @@
 
     <!-- Results Table -->
     <div>
-      <h2 class="text-lg font-semibold text-amber-400 flex items-center gap-2 mb-6">
-        <i data-lucide="file-text" class="w-5 h-5"></i>
-        All Student Results
-      </h2>
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-lg font-semibold text-amber-400 flex items-center gap-2">
+          <i data-lucide="file-text" class="w-5 h-5"></i>
+          All Student Results
+          <span class="text-sm text-gray-500 font-normal">({{ total_marks }} total)</span>
+        </h2>
+      </div>
       <div class="table-container overflow-x-auto">
         <table class="custom-table min-w-[700px]">
           <thead>
@@ -190,6 +193,16 @@
             {% endfor %}
           </tbody>
         </table>
+      </div>
+      <div class="pagination">
+        {% if page > 1 %}
+        <a href="?page={{ page - 1 }}">&laquo; Prev</a>
+        {% else %}<span class="disabled">&laquo; Prev</span>{% endif %}
+        <span class="active">{{ page }}</span>
+        {% if page < total_pages %}
+        <a href="?page={{ page + 1 }}">Next &raquo;</a>
+        {% else %}<span class="disabled">Next &raquo;</span>{% endif %}
+        <span class="text-xs text-gray-500 ml-2">Page {{ page }} of {{ total_pages }}</span>
       </div>
     </div>
   </div>

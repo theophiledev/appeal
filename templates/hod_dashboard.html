@@ -199,6 +199,16 @@
           </tbody>
         </table>
       </div>
+      <div class="pagination">
+        {% if page > 1 %}
+        <a href="?q={{ search }}&page={{ page - 1 }}">&laquo; Prev</a>
+        {% else %}<span class="disabled">&laquo; Prev</span>{% endif %}
+        <span class="active">{{ page }}</span>
+        {% if page < total_pages %}
+        <a href="?q={{ search }}&page={{ page + 1 }}">Next &raquo;</a>
+        {% else %}<span class="disabled">Next &raquo;</span>{% endif %}
+        <span class="text-xs text-gray-500 ml-2">Page {{ page }} of {{ total_pages }}</span>
+      </div>
     </div>
   </div>
 </div>
