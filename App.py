@@ -523,7 +523,7 @@ def ussd():
                 "2. Submit an appeal\n"
                 "3. Check appeal status\n"
                 "4. Reset my PIN\n"
-              "5. My Account\"
+                "5. My Account\"
                 "0. Exit"
             )
 
