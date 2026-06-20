@@ -5,43 +5,43 @@
 {% block content %}
 <div class="min-h-screen">
   <!-- Navbar -->
-  <nav class="bg-gray-900/80 backdrop-blur-lg border-b border-cyan-500/20 px-6 py-4 sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto flex items-center justify-between">
+  <nav class="bg-gray-900/80 backdrop-blur-lg border-b border-cyan-500/20 px-4 sm:px-6 py-4 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-2">
       <div class="flex items-center gap-3">
         <div
-          class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-cyan-600 flex items-center justify-center shadow-lg shadow-cyan-500/30">
+          class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-cyan-600 flex items-center justify-center shadow-lg shadow-cyan-500/30 flex-shrink-0">
           <i data-lucide="shield-check" class="w-5 h-5 text-white"></i>
         </div>
-        <div>
-          <h1 class="text-lg font-bold text-white">ULK Marks Appeal</h1>
+        <div class="min-w-0">
+          <h1 class="text-lg font-bold text-white truncate">ULK Marks Appeal</h1>
           <p class="text-xs text-cyan-400 font-medium">Admin Portal</p>
         </div>
       </div>
-      <div class="flex items-center gap-4">
-        <div class="flex items-center gap-2 text-sm text-gray-400">
+      <div class="flex items-center gap-2 sm:gap-4 flex-wrap">
+        <div class="hidden sm:flex items-center gap-2 text-sm text-gray-400">
           <i data-lucide="user-circle" class="w-4 h-4"></i>
-          <span class="text-white font-medium">{{ session.username }}</span>
+          <span class="text-white font-medium truncate max-w-[100px]">{{ session.username }}</span>
         </div>
         <a href="/student/ussd"
-          class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 rounded-lg transition-colors">
+          class="flex items-center gap-1 px-3 py-2 text-xs sm:text-sm font-medium text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 rounded-lg transition-colors">
           <i data-lucide="smartphone" class="w-4 h-4"></i>
-          USSD Simulator
+          <span class="hidden sm:inline">USSD</span>
         </a>
         <a href="/admin/system_maintenance"
-          class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors">
+          class="flex items-center gap-1 px-3 py-2 text-xs sm:text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors">
           <i data-lucide="settings" class="w-4 h-4"></i>
-          System Maintenance
+          <span class="hidden sm:inline">Maintenance</span>
         </a>
         <a href="/logout"
-          class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors">
+          class="flex items-center gap-1 px-3 py-2 text-xs sm:text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors">
           <i data-lucide="log-out" class="w-4 h-4"></i>
-          Logout
+          <span class="hidden sm:inline">Logout</span>
         </a>
       </div>
     </div>
   </nav>
 
-  <div class="max-w-7xl mx-auto px-6 py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
     <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% for cat, msg in messages %}
@@ -56,50 +56,201 @@
     {% endfor %}
     {% endwith %}
 
+    <!-- Search Bar -->
+    <div class="mb-6">
+      <form method="GET" action="/admin/dashboard" class="flex gap-2">
+        <input type="text" name="q" value="{{ search }}"
+          class="input-field flex-1" placeholder="Search students by ID, name, or phone...">
+        <button type="submit" class="btn-primary px-4">
+          <i data-lucide="search" class="w-4 h-4"></i>
+        </button>
+      </form>
+    </div>
+
     <!-- Stats Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
       <div class="stat-card">
         <div class="flex items-center justify-between mb-4">
-          <div class="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center">
-            <i data-lucide="users" class="w-6 h-6 text-cyan-400"></i>
+          <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center">
+            <i data-lucide="users" class="w-5 h-5 sm:w-6 sm:h-6 text-cyan-400"></i>
           </div>
           <span class="text-xs text-gray-500 uppercase tracking-wider">Total</span>
         </div>
-        <div class="text-3xl font-bold text-cyan-400">{{ total_students }}</div>
-        <div class="text-sm text-gray-400 mt-1">Students Registered</div>
+        <div class="text-2xl sm:text-3xl font-bold text-cyan-400">{{ total_students }}</div>
+        <div class="text-xs sm:text-sm text-gray-400 mt-1">Students Registered</div>
       </div>
 
       <div class="stat-card">
         <div class="flex items-center justify-between mb-4">
-          <div class="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center">
-            <i data-lucide="file-text" class="w-6 h-6 text-amber-400"></i>
+          <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-amber-500/10 flex items-center justify-center">
+            <i data-lucide="file-text" class="w-5 h-5 sm:w-6 sm:h-6 text-amber-400"></i>
           </div>
           <span class="text-xs text-gray-500 uppercase tracking-wider">Total</span>
         </div>
-        <div class="text-3xl font-bold text-amber-400">{{ total_appeals }}</div>
-        <div class="text-sm text-gray-400 mt-1">Appeals Submitted</div>
+        <div class="text-2xl sm:text-3xl font-bold text-amber-400">{{ total_appeals }}</div>
+        <div class="text-xs sm:text-sm text-gray-400 mt-1">Appeals Submitted</div>
       </div>
 
       <div class="stat-card">
         <div class="flex items-center justify-between mb-4">
-          <div class="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center">
-            <i data-lucide="check-circle-2" class="w-6 h-6 text-green-400"></i>
+          <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-green-500/10 flex items-center justify-center">
+            <i data-lucide="check-circle-2" class="w-5 h-5 sm:w-6 sm:h-6 text-green-400"></i>
           </div>
           <span class="text-xs text-gray-500 uppercase tracking-wider">Approved</span>
         </div>
-        <div class="text-3xl font-bold text-green-400">{{ status_counts.get('Approved', 0) }}</div>
-        <div class="text-sm text-gray-400 mt-1">Successful Appeals</div>
+        <div class="text-2xl sm:text-3xl font-bold text-green-400">{{ status_counts.get('Approved', 0) }}</div>
+        <div class="text-xs sm:text-sm text-gray-400 mt-1">Successful Appeals</div>
       </div>
 
       <div class="stat-card">
         <div class="flex items-center justify-between mb-4">
-          <div class="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center">
-            <i data-lucide="clock" class="w-6 h-6 text-red-400"></i>
+          <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-red-500/10 flex items-center justify-center">
+            <i data-lucide="clock" class="w-5 h-5 sm:w-6 sm:h-6 text-red-400"></i>
           </div>
           <span class="text-xs text-gray-500 uppercase tracking-wider">Pending</span>
         </div>
-        <div class="text-3xl font-bold text-red-400">{{ status_counts.get('Pending', 0) }}</div>
-        <div class="text-sm text-gray-400 mt-1">Awaiting Review</div>
+        <div class="text-2xl sm:text-3xl font-bold text-red-400">{{ status_counts.get('Pending', 0) }}</div>
+        <div class="text-xs sm:text-sm text-gray-400 mt-1">Awaiting Review</div>
+      </div>
+    </div>
+
+    <!-- Manage Students Section -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-lg font-semibold text-cyan-400 flex items-center gap-2">
+          <i data-lucide="users" class="w-5 h-5"></i>
+          Manage Students
+        </h2>
+      </div>
+
+      <!-- Add Student Form -->
+      <div class="glass-card rounded-xl p-4 sm:p-6 mb-6">
+        <h3 class="text-sm font-semibold text-gray-300 mb-4 flex items-center gap-2">
+          <i data-lucide="user-plus" class="w-4 h-4"></i>
+          Add New Student
+        </h3>
+        <form method="POST" action="/admin/add_student" class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+          <div>
+            <label class="block text-xs text-gray-400 mb-2">Student ID</label>
+            <input type="text" name="student_id" class="input-field" placeholder="e.g. 2205000458" required>
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-2">Full Name</label>
+            <input type="text" name="name" class="input-field" placeholder="Enter full name" required>
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-2">Phone</label>
+            <input type="text" name="phone" class="input-field" placeholder="+250780000000" required>
+          </div>
+          <button type="submit" class="btn-primary flex items-center justify-center gap-2 sm:col-start-3">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            Add Student
+          </button>
+        </form>
+      </div>
+
+      <!-- Students Table -->
+      <div class="table-container overflow-x-auto">
+        <table class="custom-table min-w-[600px]">
+          <thead>
+            <tr>
+              <th>Student ID</th>
+              <th>Name</th>
+              <th>Phone</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% set filtered = students %}
+            {% if search %}
+              {% set filtered = students | selectattr('student_id', 'in', students | map(attribute='student_id') | list) | list %}
+            {% endif %}
+            {% for s in students %}
+              {% if not search or search.lower() in s.student_id.lower() or search.lower() in s.name.lower() or search.lower() in s.phone.lower() %}
+            <tr>
+              <td>
+                <code class="text-cyan-400 text-xs bg-cyan-500/10 px-2 py-1 rounded">{{ s.student_id }}</code>
+              </td>
+              <td class="font-medium text-white">{{ s.name }}</td>
+              <td class="text-gray-400">{{ s.phone }}</td>
+              <td>
+                <div class="flex gap-2 flex-wrap">
+                  <!-- Edit form inline -->
+                  <form method="POST" action="/admin/edit_student/{{ s.student_id }}"
+                    class="flex gap-1 items-center flex-wrap"
+                    onsubmit="return confirm('Update {{ s.student_id }}?')">
+                    <input type="text" name="name" value="{{ s.name }}"
+                      class="input-field text-xs py-1 px-2 w-24 sm:w-32" required>
+                    <input type="text" name="phone" value="{{ s.phone }}"
+                      class="input-field text-xs py-1 px-2 w-24 sm:w-28" required>
+                    <button type="submit" class="px-2 py-1 bg-cyan-500 hover:bg-cyan-600 text-gray-900 text-xs font-semibold rounded-lg">
+                      Save
+                    </button>
+                  </form>
+                  <form method="POST" action="/admin/delete_student/{{ s.student_id }}">
+                    <button type="submit" class="btn-danger text-xs px-2 py-1"
+                      onclick="return confirm('Delete student {{ s.student_id }}?\nThis will remove all their data.')">
+                      <i data-lucide="trash-2" class="w-3 h-3"></i>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+              {% endif %}
+            {% else %}
+            <tr>
+              <td colspan="4" class="text-center text-gray-500 py-12">
+                <i data-lucide="users" class="w-12 h-12 mx-auto mb-3 text-gray-600"></i>
+                <p>{{ 'No students match your search.' if search else 'No students registered yet.' }}</p>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Manage Modules Section -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-lg font-semibold text-cyan-400 flex items-center gap-2">
+          <i data-lucide="book-open" class="w-5 h-5"></i>
+          Manage Modules
+        </h2>
+      </div>
+
+      <div class="glass-card rounded-xl p-4 sm:p-6 mb-6">
+        <form method="POST" action="/admin/add_module" class="flex gap-4 items-end flex-wrap">
+          <div class="flex-1 min-w-[200px]">
+            <label class="block text-xs text-gray-400 mb-2">New Module Name</label>
+            <input type="text" name="module_name" class="input-field" placeholder="e.g. Database Systems" required>
+          </div>
+          <button type="submit" class="btn-primary flex items-center justify-center gap-2">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            Add Module
+          </button>
+        </form>
+      </div>
+
+      <div class="table-container">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>Module Name</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for m in modules %}
+            <tr>
+              <td class="text-gray-300">{{ m }}</td>
+            </tr>
+            {% else %}
+            <tr>
+              <td class="text-center text-gray-500 py-8">No modules yet.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -113,12 +264,12 @@
       </div>
 
       <!-- Create Account Form -->
-      <div class="glass-card rounded-xl p-6 mb-6">
+      <div class="glass-card rounded-xl p-4 sm:p-6 mb-6">
         <h3 class="text-sm font-semibold text-gray-300 mb-4 flex items-center gap-2">
           <i data-lucide="user-plus" class="w-4 h-4"></i>
           Create New Account
         </h3>
-        <form method="POST" action="/admin/manage_accounts" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+        <form method="POST" action="/admin/manage_accounts" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
           <input type="hidden" name="action" value="create">
           <div>
             <label class="block text-xs text-gray-400 mb-2">Username</label>
@@ -143,8 +294,8 @@
       </div>
 
       <!-- Accounts Table -->
-      <div class="table-container">
-        <table class="custom-table">
+      <div class="table-container overflow-x-auto">
+        <table class="custom-table min-w-[400px]">
           <thead>
             <tr>
               <th>ID</th>
@@ -189,14 +340,58 @@
       </div>
     </div>
 
+    <!-- Recent Appeals Section -->
+    <div class="mb-8">
+      <h2 class="text-lg font-semibold text-cyan-400 flex items-center gap-2 mb-6">
+        <i data-lucide="inbox" class="w-5 h-5"></i>
+        Recent Appeals
+      </h2>
+      <div class="table-container overflow-x-auto">
+        <table class="custom-table min-w-[600px]">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Student</th>
+              <th>Module</th>
+              <th>Status</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for a in recent_appeals %}
+            <tr>
+              <td class="text-gray-400">{{ a.id }}</td>
+              <td class="font-medium text-white">{{ a.name }} <span class="text-gray-500 text-xs">({{ a.student_id }})</span></td>
+              <td class="text-gray-300">{{ a.module_name }}</td>
+              <td>
+                {% if a.status_name == 'Approved' %}
+                <span class="badge badge-green">Approved</span>
+                {% elif a.status_name == 'Rejected' %}
+                <span class="badge badge-red">Rejected</span>
+                {% else %}
+                <span class="badge badge-amber">Pending</span>
+                {% endif %}
+              </td>
+              <td class="text-gray-400 text-sm">{{ a.created_at }}</td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="5" class="text-center text-gray-500 py-8">No appeals yet.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
     <!-- Audit Log Section -->
     <div>
       <h2 class="text-lg font-semibold text-cyan-400 flex items-center gap-2 mb-6">
         <i data-lucide="history" class="w-5 h-5"></i>
         Recent Access Audit Log
       </h2>
-      <div class="table-container">
-        <table class="custom-table">
+      <div class="table-container overflow-x-auto">
+        <table class="custom-table min-w-[500px]">
           <thead>
             <tr>
               <th>Student ID</th>

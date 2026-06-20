@@ -5,43 +5,43 @@
 {% block content %}
 <div class="min-h-screen">
   <!-- Navbar -->
-  <nav class="bg-gray-900/80 backdrop-blur-lg border-b border-amber-500/20 px-6 py-4 sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto flex items-center justify-between">
+  <nav class="bg-gray-900/80 backdrop-blur-lg border-b border-amber-500/20 px-4 sm:px-6 py-4 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-2">
       <div class="flex items-center gap-3">
         <div
-          class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
+          class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/30 flex-shrink-0">
           <i data-lucide="graduation-cap" class="w-5 h-5 text-white"></i>
         </div>
-        <div>
-          <h1 class="text-lg font-bold text-white">ULK Marks Appeal</h1>
+        <div class="min-w-0">
+          <h1 class="text-lg font-bold text-white truncate">ULK Marks Appeal</h1>
           <p class="text-xs text-amber-400 font-medium">HOD Portal</p>
         </div>
       </div>
-      <div class="flex items-center gap-4">
-        <div class="flex items-center gap-2 text-sm text-gray-400">
+      <div class="flex items-center gap-2 sm:gap-4 flex-wrap">
+        <div class="hidden sm:flex items-center gap-2 text-sm text-gray-400">
           <i data-lucide="user-circle" class="w-4 h-4"></i>
-          <span class="text-white font-medium">{{ session.username }}</span>
+          <span class="text-white font-medium truncate max-w-[100px]">{{ session.username }}</span>
         </div>
         <a href="/student/ussd"
-          class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 rounded-lg transition-colors">
+          class="flex items-center gap-1 px-3 py-2 text-xs sm:text-sm font-medium text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 rounded-lg transition-colors">
           <i data-lucide="smartphone" class="w-4 h-4"></i>
-          USSD Simulator
+          <span class="hidden sm:inline">USSD</span>
         </a>
         <a href="/hod/manage_results"
-          class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors">
+          class="flex items-center gap-1 px-3 py-2 text-xs sm:text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors">
           <i data-lucide="file-edit" class="w-4 h-4"></i>
-          Manage Results
+          <span class="hidden sm:inline">Results</span>
         </a>
         <a href="/logout"
-          class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors">
+          class="flex items-center gap-1 px-3 py-2 text-xs sm:text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors">
           <i data-lucide="log-out" class="w-4 h-4"></i>
-          Logout
+          <span class="hidden sm:inline">Logout</span>
         </a>
       </div>
     </div>
   </nav>
 
-  <div class="max-w-7xl mx-auto px-6 py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
     <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% for cat, msg in messages %}
@@ -56,50 +56,61 @@
     {% endfor %}
     {% endwith %}
 
+    <!-- Search Bar -->
+    <div class="mb-6">
+      <form method="GET" action="/hod/dashboard" class="flex gap-2">
+        <input type="text" name="q" value="{{ search }}"
+          class="input-field flex-1" placeholder="Search by student ID or name...">
+        <button type="submit" class="btn-primary px-4">
+          <i data-lucide="search" class="w-4 h-4"></i>
+        </button>
+      </form>
+    </div>
+
     <!-- Stats Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
       <div class="stat-card">
         <div class="flex items-center justify-between mb-4">
-          <div class="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center">
-            <i data-lucide="clock" class="w-6 h-6 text-amber-400"></i>
+          <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-amber-500/10 flex items-center justify-center">
+            <i data-lucide="clock" class="w-5 h-5 sm:w-6 sm:h-6 text-amber-400"></i>
           </div>
           <span class="text-xs text-gray-500 uppercase tracking-wider">Pending</span>
         </div>
-        <div class="text-3xl font-bold text-amber-400">{{ counts.get('Pending', 0) }}</div>
-        <div class="text-sm text-gray-400 mt-1">Awaiting Review</div>
+        <div class="text-2xl sm:text-3xl font-bold text-amber-400">{{ counts.get('Pending', 0) }}</div>
+        <div class="text-xs sm:text-sm text-gray-400 mt-1">Awaiting Review</div>
       </div>
 
       <div class="stat-card">
         <div class="flex items-center justify-between mb-4">
-          <div class="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center">
-            <i data-lucide="check-circle-2" class="w-6 h-6 text-green-400"></i>
+          <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-green-500/10 flex items-center justify-center">
+            <i data-lucide="check-circle-2" class="w-5 h-5 sm:w-6 sm:h-6 text-green-400"></i>
           </div>
           <span class="text-xs text-gray-500 uppercase tracking-wider">Approved</span>
         </div>
-        <div class="text-3xl font-bold text-green-400">{{ counts.get('Approved', 0) }}</div>
-        <div class="text-sm text-gray-400 mt-1">Successful Appeals</div>
+        <div class="text-2xl sm:text-3xl font-bold text-green-400">{{ counts.get('Approved', 0) }}</div>
+        <div class="text-xs sm:text-sm text-gray-400 mt-1">Successful Appeals</div>
       </div>
 
       <div class="stat-card">
         <div class="flex items-center justify-between mb-4">
-          <div class="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center">
-            <i data-lucide="x-circle" class="w-6 h-6 text-red-400"></i>
+          <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-red-500/10 flex items-center justify-center">
+            <i data-lucide="x-circle" class="w-5 h-5 sm:w-6 sm:h-6 text-red-400"></i>
           </div>
           <span class="text-xs text-gray-500 uppercase tracking-wider">Rejected</span>
         </div>
-        <div class="text-3xl font-bold text-red-400">{{ counts.get('Rejected', 0) }}</div>
-        <div class="text-sm text-gray-400 mt-1">Declined Appeals</div>
+        <div class="text-2xl sm:text-3xl font-bold text-red-400">{{ counts.get('Rejected', 0) }}</div>
+        <div class="text-xs sm:text-sm text-gray-400 mt-1">Declined Appeals</div>
       </div>
 
       <div class="stat-card">
         <div class="flex items-center justify-between mb-4">
-          <div class="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center">
-            <i data-lucide="file-text" class="w-6 h-6 text-cyan-400"></i>
+          <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center">
+            <i data-lucide="file-text" class="w-5 h-5 sm:w-6 sm:h-6 text-cyan-400"></i>
           </div>
           <span class="text-xs text-gray-500 uppercase tracking-wider">Total</span>
         </div>
-        <div class="text-3xl font-bold text-cyan-400">{{ appeals | length }}</div>
-        <div class="text-sm text-gray-400 mt-1">All Appeals</div>
+        <div class="text-2xl sm:text-3xl font-bold text-cyan-400">{{ appeals | length }}</div>
+        <div class="text-xs sm:text-sm text-gray-400 mt-1">All Appeals</div>
       </div>
     </div>
 
@@ -111,8 +122,8 @@
           Manage Appeals
         </h2>
       </div>
-      <div class="table-container">
-        <table class="custom-table">
+      <div class="table-container overflow-x-auto">
+        <table class="custom-table min-w-[700px]">
           <thead>
             <tr>
               <th>#</th>
@@ -127,6 +138,7 @@
           </thead>
           <tbody>
             {% for appeal in appeals %}
+            {% if not search or search.lower() in appeal.student_id.lower() or search.lower() in appeal.student_name.lower() or search.lower() in appeal.module_name.lower() %}
             <tr>
               <td class="text-gray-400">{{ appeal.id }}</td>
               <td>
@@ -135,11 +147,11 @@
               <td class="font-medium text-white">{{ appeal.student_name }}</td>
               <td class="text-gray-300">{{ appeal.module_name }}</td>
               <td>
-                <div class="max-w-xs truncate text-gray-400 text-sm" title="{{ appeal.reason }}">
+                <div class="max-w-[120px] sm:max-w-xs truncate text-gray-400 text-sm" title="{{ appeal.reason }}">
                   {{ appeal.reason }}
                 </div>
               </td>
-              <td class="text-gray-400 text-sm">{{ appeal.created_at }}</td>
+              <td class="text-gray-400 text-sm whitespace-nowrap">{{ appeal.created_at }}</td>
               <td>
                 {% if appeal.status == 'Approved' %}
                 <span class="badge badge-green">Approved</span>
@@ -155,16 +167,16 @@
                 {% endif %}
               </td>
               <td>
-                <form method="POST" action="/hod/manage_appeal/{{ appeal.id }}" class="flex flex-col gap-2">
-                  <div class="flex gap-2">
-                    <select name="status" class="input-field text-xs py-1.5 px-2"
+                <form method="POST" action="/hod/manage_appeal/{{ appeal.id }}" class="flex flex-col gap-2 min-w-[160px]">
+                  <div class="flex gap-1">
+                    <select name="status" class="input-field text-xs py-1.5 px-1 w-full"
                             onchange="document.getElementById('reason-{{ appeal.id }}').style.display = this.value === 'Rejected' ? 'block' : 'none'">
                       <option value="Pending" {% if appeal.status=='Pending' %}selected{% endif %}>Pending</option>
                       <option value="Approved" {% if appeal.status=='Approved' %}selected{% endif %}>Approved</option>
                       <option value="Rejected" {% if appeal.status=='Rejected' %}selected{% endif %}>Rejected</option>
                     </select>
                     <button type="submit"
-                      class="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-gray-900 text-xs font-semibold rounded-lg transition-colors">
+                      class="px-2 py-1.5 bg-amber-500 hover:bg-amber-600 text-gray-900 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap">
                       Save
                     </button>
                   </div>
@@ -175,11 +187,12 @@
                 </form>
               </td>
             </tr>
+            {% endif %}
             {% else %}
             <tr>
               <td colspan="8" class="text-center text-gray-500 py-12">
                 <i data-lucide="inbox" class="w-12 h-12 mx-auto mb-3 text-gray-600"></i>
-                <p>No appeals submitted yet.</p>
+                <p>{{ 'No appeals match your search.' if search else 'No appeals submitted yet.' }}</p>
               </td>
             </tr>
             {% endfor %}

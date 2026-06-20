@@ -241,6 +241,14 @@ def admin_dashboard():
     """)
     audit_log = c.fetchall()
 
+    # All students
+    c.execute("SELECT student_id, name, phone FROM students ORDER BY name")
+    all_students = c.fetchall()
+
+    # All modules (distinct from marks)
+    c.execute("SELECT DISTINCT module_name FROM marks ORDER BY module_name")
+    all_modules = [r['module_name'] for r in c.fetchall()]
+
     # Recent appeals
     rc_col = _has_review_comment(cur())
     c.execute(f"""
@@ -253,13 +261,19 @@ def admin_dashboard():
     """)
     recent_appeals = c.fetchall()
 
+    # Search query
+    search = request.args.get('q', '').strip()
+
     return render_template('admin_dashboard.html',
                            total_students=total_students,
                            total_appeals=total_appeals,
                            status_counts=status_counts,
                            accounts=accounts,
                            audit_log=audit_log,
-                           recent_appeals=recent_appeals)
+                           recent_appeals=recent_appeals,
+                           students=all_students,
+                           modules=all_modules,
+                           search=search)
 
 
 @app.route('/admin/manage_accounts', methods=['GET', 'POST'])
@@ -291,6 +305,64 @@ def admin_manage_accounts():
             mysql.connection.commit()
             flash('🗑️ Account removed.', 'success')
 
+    return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/admin/add_student', methods=['POST'])
+@admin_required
+def admin_add_student():
+    student_id = request.form['student_id']
+    name       = request.form['name']
+    phone      = request.form['phone']
+    c = cur(False)
+    try:
+        c.execute("INSERT INTO students (student_id, name, phone) VALUES (%s, %s, %s)",
+                  (student_id, name, phone))
+        mysql.connection.commit()
+        flash(f'✅ Student {name} ({student_id}) added.', 'success')
+    except Exception as e:
+        flash(f'❌ Error: {e}', 'danger')
+    return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/admin/delete_student/<student_id>', methods=['POST'])
+@admin_required
+def admin_delete_student(student_id):
+    c = cur(False)
+    try:
+        c.execute("DELETE FROM students WHERE student_id=%s", (student_id,))
+        mysql.connection.commit()
+        flash(f'🗑️ Student {student_id} deleted.', 'success')
+    except Exception as e:
+        flash(f'❌ Error: {e}', 'danger')
+    return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/admin/add_module', methods=['POST'])
+@admin_required
+def admin_add_module():
+    module_name = request.form['module_name'].strip()
+    c = cur(False)
+    try:
+        c.execute("INSERT INTO marks (student_id, module_name, mark) VALUES (%s, %s, %s)",
+                  ('__TEMPLATE__', module_name, '0'))
+        mysql.connection.commit()
+        flash(f'✅ Module "{module_name}" added.', 'success')
+    except Exception as e:
+        flash(f'❌ Error: {e}', 'danger')
+    return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/admin/edit_student/<student_id>', methods=['POST'])
+@admin_required
+def admin_edit_student(student_id):
+    name  = request.form['name']
+    phone = request.form['phone']
+    c = cur(False)
+    c.execute("UPDATE students SET name=%s, phone=%s WHERE student_id=%s",
+              (name, phone, student_id))
+    mysql.connection.commit()
+    flash(f'✅ Student {student_id} updated.', 'success')
     return redirect(url_for('admin_dashboard'))
 
 
@@ -403,7 +475,9 @@ def hod_dashboard():
     """)
     counts = {r['status_name']: r['cnt'] for r in c.fetchall()}
 
-    return render_template('hod_dashboard.html', appeals=appeals, counts=counts)
+    search = request.args.get('q', '').strip()
+
+    return render_template('hod_dashboard.html', appeals=appeals, counts=counts, search=search)
 
 
 @app.route('/hod/manage_appeal/<int:appeal_id>', methods=['POST'])
@@ -463,7 +537,7 @@ def hod_manage_results():
 
         elif action == 'add':
             student_id  = request.form['student_id']
-            module_name = request.form['module_name']
+            module_name = request.form.get('module_name') or request.form.get('module_name_new', '').strip()
             mark        = request.form['mark']
             c2 = cur(False)
             c2.execute(
@@ -486,7 +560,12 @@ def hod_manage_results():
     c.execute("SELECT student_id, name FROM students ORDER BY name")
     students = c.fetchall()
 
-    return render_template('hod_results.html', results=results, students=students)
+    c.execute("SELECT DISTINCT module_name FROM marks ORDER BY module_name")
+    modules = [r['module_name'] for r in c.fetchall()]
+
+    search = request.args.get('q', '').strip()
+
+    return render_template('hod_results.html', results=results, students=students, modules=modules, search=search)
 
 
 # =============================================================================
@@ -549,6 +628,9 @@ def ussd():
                 if auth != 'OK':
                     return _ussd(f"END {auth}")
                 c = cur()
+                c.execute("SELECT name FROM students WHERE student_id=%s", (student_id,))
+                student_row = c.fetchone()
+                student_name = student_row['name'] if student_row else 'Dear Student'
                 c.execute(
                     "SELECT module_name, mark FROM marks WHERE student_id=%s ORDER BY module_name",
                     (student_id,)
@@ -557,7 +639,7 @@ def ussd():
                 if not rows:
                     return _ussd("END No results found for your Student ID.")
                 body = "\n".join(f"{r['module_name']}: {r['mark']}" for r in rows)
-                return _ussd(f"END Here are your results, dear student:\n{body}")
+                return _ussd(f"END Here are your results, {student_name}:\n{body}")
 
         # ════════════════════════════════════════════════════════════════════
         # 2. SUBMIT APPEAL  (Student: submit appeal)
