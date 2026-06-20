@@ -727,7 +727,7 @@ def ussd():
 
 #editing and adding 5=================================================
 #=====================================================================
- if steps[0] == '5':
+if steps[0] == '5':
             if len(steps) == 1:
                 return _ussd("CON Please enter your Student ID:\n0. Back to menu")
             if len(steps) == 2:
