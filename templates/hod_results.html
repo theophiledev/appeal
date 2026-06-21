@@ -134,49 +134,45 @@
               <td class="font-medium text-white">{{ r.name }}</td>
               <td class="text-gray-300">{{ r.module_name }}</td>
               <td>
-                {% set mark_num = r.mark|int(-1) %}
-                {% if mark_num >= 0 %}
-                  {% if mark_num >= 80 %}
-                  <span class="badge badge-green">{{ r.mark }} (A)</span>
-                  {% elif mark_num >= 70 %}
-                  <span class="badge badge-teal">{{ r.mark }} (B+)</span>
-                  {% elif mark_num >= 60 %}
-                  <span class="badge badge-teal">{{ r.mark }} (B)</span>
-                  {% elif mark_num >= 55 %}
-                  <span class="badge badge-amber">{{ r.mark }} (C+)</span>
-                  {% elif mark_num >= 50 %}
-                  <span class="badge badge-amber">{{ r.mark }} (C)</span>
-                  {% elif mark_num >= 40 %}
-                  <span class="badge badge-orange" style="background:rgba(244,162,97,0.15);color:#f4a261;border:1px solid rgba(244,162,97,0.3)">{{ r.mark }} (D)</span>
-                  {% else %}
-                  <span class="badge badge-red">{{ r.mark }} (F)</span>
-                  {% endif %}
+                {% set m = r.mark|int(-1) %}
+                {% if m >= 0 %}
+                  {% if m >= 80 %}<span class="badge badge-green">{{ m }} <span class="opacity-60">(A)</span></span>
+                  {% elif m >= 70 %}<span class="badge badge-teal">{{ m }} <span class="opacity-60">(B+)</span></span>
+                  {% elif m >= 60 %}<span class="badge badge-teal">{{ m }} <span class="opacity-60">(B)</span></span>
+                  {% elif m >= 55 %}<span class="badge badge-amber">{{ m }} <span class="opacity-60">(C+)</span></span>
+                  {% elif m >= 50 %}<span class="badge badge-amber">{{ m }} <span class="opacity-60">(C)</span></span>
+                  {% elif m >= 40 %}<span class="badge badge-orange" style="background:rgba(244,162,97,0.15);color:#f4a261;border:1px solid rgba(244,162,97,0.3)">{{ m }} <span class="opacity-60">(D)</span></span>
+                  {% else %}<span class="badge badge-red">{{ m }} <span class="opacity-60">(F)</span></span>{% endif %}
                 {% else %}
                   {% set first = r.mark|upper|first %}
-                  {% if first == 'A' %}
-                  <span class="badge badge-green">{{ r.mark }}</span>
-                  {% elif first == 'B' %}
-                  <span class="badge badge-teal">{{ r.mark }}</span>
-                  {% elif first == 'C' %}
-                  <span class="badge badge-amber">{{ r.mark }}</span>
-                  {% elif first == 'D' %}
-                  <span class="badge badge-orange" style="background:rgba(244,162,97,0.15);color:#f4a261;border:1px solid rgba(244,162,97,0.3)">{{ r.mark }}</span>
-                  {% else %}
-                  <span class="badge badge-red">{{ r.mark }}</span>
-                  {% endif %}
+                  {% if first == 'A' %}<span class="badge badge-green">{{ r.mark }}</span>
+                  {% elif first == 'B' %}<span class="badge badge-teal">{{ r.mark }}</span>
+                  {% elif first == 'C' %}<span class="badge badge-amber">{{ r.mark }}</span>
+                  {% elif first == 'D' %}<span class="badge badge-orange" style="background:rgba(244,162,97,0.15);color:#f4a261;border:1px solid rgba(244,162,97,0.3)">{{ r.mark }}</span>
+                  {% else %}<span class="badge badge-red">{{ r.mark }}</span>{% endif %}
                 {% endif %}
               </td>
               <td class="text-gray-400 text-sm">{{ r.updated_by or '—' }}</td>
               <td class="text-gray-400 text-sm whitespace-nowrap">{{ r.updated_at or '—' }}</td>
               <td>
-                <form method="POST" class="flex gap-2">
+                <form method="POST" class="flex gap-1 items-center">
                   <input type="hidden" name="action" value="update">
                   <input type="hidden" name="student_id" value="{{ r.student_id }}">
                   <input type="hidden" name="module_name" value="{{ r.module_name }}">
-                  <input type="text" name="mark" value="{{ r.mark }}"
-                    class="input-field text-xs py-1.5 px-2 w-16 sm:w-20 text-center">
+                  <input type="number" name="mark" min="0" max="100" value="{{ r.mark|int(-1) if r.mark|int(-1) >= 0 else r.mark }}"
+                    class="input-field text-xs py-1.5 px-2 w-14 sm:w-16 text-center" title="Enter 0-100">
+                  {% set m = r.mark|int(-1) %}
+                  {% if m >= 0 %}
+                    {% if m >= 80 %}<span class="badge badge-green text-[10px] px-1.5 py-0.5">A</span>
+                    {% elif m >= 70 %}<span class="badge badge-teal text-[10px] px-1.5 py-0.5">B+</span>
+                    {% elif m >= 60 %}<span class="badge badge-teal text-[10px] px-1.5 py-0.5">B</span>
+                    {% elif m >= 55 %}<span class="badge badge-amber text-[10px] px-1.5 py-0.5">C+</span>
+                    {% elif m >= 50 %}<span class="badge badge-amber text-[10px] px-1.5 py-0.5">C</span>
+                    {% elif m >= 40 %}<span class="badge badge-orange text-[10px] px-1.5 py-0.5" style="background:rgba(244,162,97,0.15);color:#f4a261;border:1px solid rgba(244,162,97,0.3)">D</span>
+                    {% else %}<span class="badge badge-red text-[10px] px-1.5 py-0.5">F</span>{% endif %}
+                  {% endif %}
                   <button type="submit"
-                    class="px-2 sm:px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-gray-900 text-xs font-semibold rounded-lg transition-colors">
+                    class="px-2 py-1.5 bg-amber-500 hover:bg-amber-600 text-gray-900 text-xs font-semibold rounded-lg transition-colors">
                     Save
                   </button>
                 </form>

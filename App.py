@@ -547,8 +547,8 @@ def hod_manage_appeal(appeal_id):
     new_status = request.form.get('status')
     comment    = request.form.get('review_comment', '').strip()
 
-    if new_status == 'Rejected' and not comment:
-        flash('Please provide a reason for rejection.', 'danger')
+    if new_status != 'Pending' and not comment:
+        flash('Please provide a comment for this action.', 'danger')
         return redirect(url_for('hod_dashboard'))
 
     c = cur()

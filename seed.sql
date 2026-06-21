@@ -26,26 +26,26 @@ INSERT IGNORE INTO pin_credentials (student_id, pin_hash, failed_attempts, locke
 
 -- ── Marks / Results ────────────────────────────────────────────────────────
 INSERT IGNORE INTO marks (student_id, module_name, mark) VALUES
-    ('2205000458', 'Database Management',    'A'),
-    ('2205000458', 'Software Engineering',   'B+'),
-    ('2205000458', 'Networking',             'B'),
-    ('2205000458', 'Web Development',        'A-'),
-    ('2205000459', 'Database Management',    'B'),
-    ('2205000459', 'Software Engineering',   'A-'),
-    ('2205000459', 'Networking',             'C+'),
-    ('2205000459', 'Web Development',        'B+'),
-    ('2205000460', 'Database Management',    'C'),
-    ('2205000460', 'Software Engineering',   'B'),
-    ('2205000460', 'Networking',             'A-'),
-    ('2205000460', 'Web Development',        'D'),
-    ('2205000461', 'Database Management',    'A'),
-    ('2205000461', 'Software Engineering',   'A'),
-    ('2205000461', 'Networking',             'B+'),
-    ('2205000461', 'Web Development',        'A'),
-    ('2205000462', 'Database Management',    'C+'),
-    ('2205000462', 'Software Engineering',   'D'),
-    ('2205000462', 'Networking',             'B'),
-    ('2205000462', 'Web Development',        'F');
+    ('2205000458', 'Database Management',    '85'),
+    ('2205000458', 'Software Engineering',   '74'),
+    ('2205000458', 'Networking',             '65'),
+    ('2205000458', 'Web Development',        '82'),
+    ('2205000459', 'Database Management',    '65'),
+    ('2205000459', 'Software Engineering',   '80'),
+    ('2205000459', 'Networking',             '57'),
+    ('2205000459', 'Web Development',        '75'),
+    ('2205000460', 'Database Management',    '52'),
+    ('2205000460', 'Software Engineering',   '62'),
+    ('2205000460', 'Networking',             '82'),
+    ('2205000460', 'Web Development',        '45'),
+    ('2205000461', 'Database Management',    '88'),
+    ('2205000461', 'Software Engineering',   '92'),
+    ('2205000461', 'Networking',             '78'),
+    ('2205000461', 'Web Development',        '90'),
+    ('2205000462', 'Database Management',    '57'),
+    ('2205000462', 'Software Engineering',   '45'),
+    ('2205000462', 'Networking',             '65'),
+    ('2205000462', 'Web Development',        '30');
 
 -- ── Sample appeals (for demo) ──────────────────────────────────────────────
 INSERT IGNORE INTO appeals (student_id, module_name, reason, status_id, review_comment) VALUES

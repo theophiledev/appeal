@@ -147,7 +147,7 @@
               <td class="font-medium text-white">{{ appeal.student_name }}</td>
               <td class="text-gray-300">{{ appeal.module_name }}</td>
               <td>
-                <div class="max-w-[120px] sm:max-w-xs truncate text-gray-400 text-sm" title="{{ appeal.reason }}">
+                <div class="max-w-[200px] sm:max-w-sm text-gray-400 text-sm break-words leading-relaxed" title="{{ appeal.reason }}">
                   {{ appeal.reason }}
                 </div>
               </td>
@@ -170,7 +170,7 @@
                 <form method="POST" action="/hod/manage_appeal/{{ appeal.id }}" class="flex flex-col gap-2 min-w-[160px]">
                   <div class="flex gap-1">
                     <select name="status" class="input-field text-xs py-1.5 px-1 w-full"
-                            onchange="document.getElementById('reason-{{ appeal.id }}').style.display = this.value === 'Rejected' ? 'block' : 'none'">
+                            onchange="document.getElementById('reason-{{ appeal.id }}').style.display = this.value !== 'Pending' ? 'block' : 'none'">
                       <option value="Pending" {% if appeal.status=='Pending' %}selected{% endif %}>Pending</option>
                       <option value="Approved" {% if appeal.status=='Approved' %}selected{% endif %}>Approved</option>
                       <option value="Rejected" {% if appeal.status=='Rejected' %}selected{% endif %}>Rejected</option>
@@ -181,9 +181,9 @@
                     </button>
                   </div>
                   <textarea name="review_comment" id="reason-{{ appeal.id }}" rows="2"
-                    placeholder="Reason for rejection..."
+                    placeholder="Add a comment for this decision..."
                     class="input-field text-xs py-1.5 px-2"
-                    style="display:{{ 'block' if appeal.status == 'Rejected' else 'none' }}">{{ appeal.review_comment or '' }}</textarea>
+                    style="display:{{ 'block' if appeal.status != 'Pending' else 'none' }}">{{ appeal.review_comment or '' }}</textarea>
                 </form>
               </td>
             </tr>
