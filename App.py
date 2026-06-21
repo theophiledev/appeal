@@ -373,7 +373,7 @@ def admin_add_student():
         flash(f'✅ Student {name} ({student_id}) added.', 'success')
     except Exception as e:
         flash(f'❌ Error: {e}', 'danger')
-    return redirect(url_for('admin_dashboard'))
+    return redirect(url_for('admin_dashboard', tab='students'))
 
 
 @app.route('/admin/delete_student/<student_id>', methods=['POST'])
@@ -386,7 +386,7 @@ def admin_delete_student(student_id):
         flash(f'🗑️ Student {student_id} deleted.', 'success')
     except Exception as e:
         flash(f'❌ Error: {e}', 'danger')
-    return redirect(url_for('admin_dashboard'))
+    return redirect(url_for('admin_dashboard', tab='students'))
 
 
 @app.route('/admin/add_module', methods=['POST'])
@@ -395,13 +395,14 @@ def admin_add_module():
     module_name = request.form['module_name'].strip()
     c = cur(False)
     try:
+        c.execute("INSERT IGNORE INTO students (student_id, name, phone) VALUES ('__TEMPLATE__', '__System__', '__template__')")
         c.execute("INSERT INTO marks (student_id, module_name, mark) VALUES (%s, %s, %s)",
                   ('__TEMPLATE__', module_name, '0'))
         mysql.connection.commit()
         flash(f'✅ Module "{module_name}" added.', 'success')
     except Exception as e:
         flash(f'❌ Error: {e}', 'danger')
-    return redirect(url_for('admin_dashboard'))
+    return redirect(url_for('admin_dashboard', tab='modules'))
 
 
 @app.route('/admin/edit_student/<student_id>', methods=['POST'])
@@ -414,7 +415,7 @@ def admin_edit_student(student_id):
               (name, phone, student_id))
     mysql.connection.commit()
     flash(f'✅ Student {student_id} updated.', 'success')
-    return redirect(url_for('admin_dashboard'))
+    return redirect(url_for('admin_dashboard', tab='students'))
 
 
 @app.route('/admin/system_maintenance')
