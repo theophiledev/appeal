@@ -77,16 +77,12 @@
           </div>
           <div>
             <label class="block text-xs text-gray-400 mb-2">Module Name</label>
-            <select name="module_name" class="input-field">
+            <select name="module_name" class="input-field" required>
               <option value="">-- Select module --</option>
               {% for m in modules %}
               <option value="{{ m }}">{{ m }}</option>
               {% endfor %}
             </select>
-          </div>
-          <div>
-            <label class="block text-xs text-gray-400 mb-2">Or new module</label>
-            <input type="text" name="module_name_new" class="input-field" placeholder="New module name">
           </div>
           <div>
             <label class="block text-xs text-gray-400 mb-2">Mark (0–100)</label>

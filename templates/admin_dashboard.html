@@ -325,14 +325,36 @@
         </form>
       </div>
 
-      <div class="table-container">
-        <table class="custom-table">
-          <thead><tr><th>Module Name</th></tr></thead>
+      <div class="table-container overflow-x-auto">
+        <table class="custom-table min-w-[400px]">
+          <thead><tr><th>Module Name</th><th>Actions</th></tr></thead>
           <tbody>
             {% for m in modules %}
-            <tr><td class="text-gray-300">{{ m }}</td></tr>
+            <tr>
+              <td class="text-gray-300 font-medium">{{ m }}</td>
+              <td>
+                <div class="flex gap-2 flex-wrap items-center">
+                  <form method="POST" action="/admin/rename_module" class="flex gap-1 items-center">
+                    <input type="hidden" name="old_name" value="{{ m }}">
+                    <input type="text" name="new_name" value="{{ m }}" required
+                      class="input-field text-xs py-1 px-2 w-28 sm:w-36">
+                    <button type="submit"
+                      class="px-2 py-1 bg-cyan-500 hover:bg-cyan-600 text-gray-900 text-xs font-semibold rounded-lg transition-colors">
+                      <span class="hidden sm:inline">Rename</span><span class="sm:hidden">R</span>
+                    </button>
+                  </form>
+                  <form method="POST" action="/admin/delete_module/{{ m }}">
+                    <button type="submit"
+                      class="btn-danger text-xs px-2 py-1"
+                      onclick="return confirm('Delete module \"{{ m }}\" and all its marks?')">
+                      <i data-lucide="trash-2" class="w-3 h-3"></i>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
             {% else %}
-            <tr><td class="text-center text-gray-500 py-8">No modules yet.</td></tr>
+            <tr><td colspan="2" class="text-center text-gray-500 py-8">No modules yet.</td></tr>
             {% endfor %}
           </tbody>
         </table>

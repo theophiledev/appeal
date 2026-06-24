@@ -423,6 +423,31 @@ def admin_add_module():
     return redirect(url_for('admin_dashboard', tab='modules'))
 
 
+@app.route('/admin/rename_module', methods=['POST'])
+@admin_required
+def admin_rename_module():
+    old_name = request.form.get('old_name', '').strip()
+    new_name = request.form.get('new_name', '').strip()
+    if not old_name or not new_name:
+        flash('Both old and new module names are required.', 'danger')
+        return redirect(url_for('admin_dashboard', tab='modules'))
+    c = cur(False)
+    c.execute("UPDATE marks SET module_name=%s WHERE module_name=%s", (new_name, old_name))
+    mysql.connection.commit()
+    flash(f'✅ Module renamed from "{old_name}" to "{new_name}".', 'success')
+    return redirect(url_for('admin_dashboard', tab='modules'))
+
+
+@app.route('/admin/delete_module/<path:module_name>', methods=['POST'])
+@admin_required
+def admin_delete_module(module_name):
+    c = cur(False)
+    c.execute("DELETE FROM marks WHERE module_name=%s", (module_name,))
+    mysql.connection.commit()
+    flash(f'🗑️ Module "{module_name}" and all its marks deleted.', 'success')
+    return redirect(url_for('admin_dashboard', tab='modules'))
+
+
 @app.route('/admin/edit_student/<student_id>', methods=['POST'])
 @admin_required
 def admin_edit_student(student_id):
@@ -616,7 +641,7 @@ def hod_manage_results():
 
         elif action == 'add':
             student_id  = request.form['student_id']
-            module_name = request.form.get('module_name') or request.form.get('module_name_new', '').strip()
+            module_name = request.form.get('module_name', '').strip()
             mark        = request.form['mark']
             c2 = cur(False)
             c2.execute(
