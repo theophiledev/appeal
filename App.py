@@ -53,8 +53,7 @@ app.config['MYSQL_PORT']     = int(os.environ.get('MYSQL_PORT', 3306))
 
 mysql = MySQL(app)
 
-# ── In-memory stores (use Redis in production) ──────────────────────────────
-_otp_store: dict = {}          # phone -> { otp, expires }
+# ── Stores ───────────────────────────────────────────────────────────────────
 _login_attempts: dict = {}     # ip -> { count, last_attempt }
 MAX_LOGIN_ATTEMPTS = 5
 LOGIN_LOCKOUT_MINUTES = 15
@@ -116,12 +115,23 @@ def log_access(student_id: str, phone: str, action: str, success: bool):
     mysql.connection.commit()
 
 
+def _clean_expired_otps():
+    c = cur(False)
+    c.execute("DELETE FROM otp_store WHERE expires < NOW()")
+    mysql.connection.commit()
+
+
 def send_otp(phone: str) -> str:
     otp = ''.join(random.choices(string.digits, k=6))
-    _otp_store[phone] = {
-        'otp': otp,
-        'expires': datetime.now() + timedelta(minutes=10)
-    }
+    expires = datetime.now() + timedelta(minutes=10)
+    c = cur(False)
+    c.execute(
+        "INSERT INTO otp_store (phone, otp, expires) VALUES (%s, %s, %s) "
+        "ON DUPLICATE KEY UPDATE otp=VALUES(otp), expires=VALUES(expires)",
+        (phone, otp, expires)
+    )
+    mysql.connection.commit()
+    _clean_expired_otps()
     if AT_ENABLED:
         try:
             at_sms.send(
@@ -135,14 +145,21 @@ def send_otp(phone: str) -> str:
 
 
 def verify_otp(phone: str, provided: str) -> bool:
-    rec = _otp_store.get(phone)
+    _clean_expired_otps()
+    c = cur()
+    c.execute("SELECT otp, expires FROM otp_store WHERE phone=%s", (phone,))
+    rec = c.fetchone()
     if not rec:
         return False
     if datetime.now() > rec['expires']:
-        _otp_store.pop(phone, None)
+        c2 = cur(False)
+        c2.execute("DELETE FROM otp_store WHERE phone=%s", (phone,))
+        mysql.connection.commit()
         return False
     if rec['otp'] == provided:
-        _otp_store.pop(phone, None)
+        c2 = cur(False)
+        c2.execute("DELETE FROM otp_store WHERE phone=%s", (phone,))
+        mysql.connection.commit()
         return True
     return False
 
@@ -877,8 +894,11 @@ def ussd():
                 st = c.fetchone()
                 if not st:
                     return _ussd("END Student ID not found in our system.")
-                existing = _otp_store.get(st['phone'])
-                if existing and existing['expires'] > datetime.now():
+                _clean_expired_otps()
+                c2 = cur()
+                c2.execute("SELECT otp, expires FROM otp_store WHERE phone=%s", (st['phone'],))
+                existing = c2.fetchone()
+                if existing:
                     otp = existing['otp']
                 else:
                     otp = send_otp(st['phone'])

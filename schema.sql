@@ -75,6 +75,14 @@ CREATE TABLE IF NOT EXISTS access_audit (
     timestamp   DATETIME     DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
+-- ── Persistent OTP store (survives restarts & multi-worker) ─────────────────
+CREATE TABLE IF NOT EXISTS otp_store (
+    phone    VARCHAR(20)   PRIMARY KEY,
+    otp      VARCHAR(6)    NOT NULL,
+    expires  DATETIME      NOT NULL,
+    INDEX idx_expires (expires)
+) ENGINE=InnoDB;
+
 -- ── Default admin account (password: admin123) ─────────────────────────────
 INSERT IGNORE INTO admins (username, password, role) VALUES
     ('admin', '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9', 'admin');
