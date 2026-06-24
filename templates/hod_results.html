@@ -123,7 +123,7 @@
             {% for r in results %}
             {% if not search or search.lower() in r.student_id.lower() or search.lower() in r.name.lower() or search.lower() in r.module_name.lower() %}
             <tr>
-              <td class="text-gray-400">{{ r.id }}</td>
+              <td class="text-gray-400">{{ (page - 1) * 10 + loop.index }}</td>
               <td>
                 <code class="text-cyan-400 text-xs bg-cyan-500/10 px-2 py-1 rounded">{{ r.student_id }}</code>
               </td>

@@ -537,7 +537,7 @@
           <tbody>
             {% for r in all_marks %}
             <tr>
-              <td class="text-gray-400">{{ r.id }}</td>
+              <td class="text-gray-400">{{ loop.index }}</td>
               <td><code class="text-cyan-400 text-xs bg-cyan-500/10 px-2 py-1 rounded">{{ r.student_id }}</code></td>
               <td class="font-medium text-white">{{ r.name }}</td>
               <td class="text-gray-300">{{ r.module_name }}</td>

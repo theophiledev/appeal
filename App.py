@@ -302,7 +302,7 @@ def admin_dashboard():
         FROM   marks m
         JOIN   students s ON m.student_id = s.student_id
         WHERE  m.student_id != '__TEMPLATE__'
-        ORDER  BY m.student_id, m.module_name
+        ORDER  BY s.name, m.module_name
     """)
     all_marks = c.fetchall()
 
@@ -658,14 +658,14 @@ def hod_manage_results():
     c.execute("SELECT COUNT(*) AS cnt FROM marks WHERE student_id != '__TEMPLATE__'")
     total_marks = c.fetchone()['cnt']
 
-    # Paginated student results (exclude template)
+    # Paginated student results (exclude template), sorted by student name A-Z
     c.execute("""
         SELECT m.id, m.student_id, s.name, m.module_name, m.mark,
                m.updated_by, m.updated_at
         FROM   marks m
         JOIN   students s ON m.student_id = s.student_id
         WHERE  m.student_id != '__TEMPLATE__'
-        ORDER  BY m.student_id, m.module_name
+        ORDER  BY s.name, m.module_name
         LIMIT %s OFFSET %s
     """, (per_page, (page - 1) * per_page))
     results = c.fetchall()
