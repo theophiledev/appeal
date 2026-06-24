@@ -884,6 +884,7 @@ def ussd():
                     otp = send_otp(st['phone'])
                 is_sim = phone_number.startswith('250') and request.form.get('sessionId','').startswith('sim-')
                 msg = "CON An OTP has been sent to your registered mobile number.\nPlease enter the OTP:"
+                msg += "\n\n(If session expires, re-dial *XXX# and re-enter your Student ID — the same OTP will still work.)"
                 if is_sim:
                     msg += f"\n\n[Simulator OTP: {otp}]"
                 return _ussd(msg)
